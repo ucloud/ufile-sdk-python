@@ -105,10 +105,10 @@ ret, resp = putufile_handler.putfile(public_bucket, stream_key, bio)
 * demo程序
 
 ~~~~~~~~~~~~~~~{.py}
-public_bucket = ''		#公共空间名称
-private_bucket = ''		#私有空间名称
-localfile = ''			#本地文件名
-post_key = ''			#上传文件在空间中的名称
+public_bucket = ''      #公共空间名称
+private_bucket = ''     #私有空间名称
+localfile = ''          #本地文件名
+post_key = ''           #上传文件在空间中的名称
 
 from ufile import filemanager
 
@@ -137,11 +137,11 @@ assert resp.status_code == 200
 * demo程序
 
 ~~~~~~~~~~~~~~~{.py}
-public_bucket = ''		#公共空间名称
+public_bucket = ''      #公共空间名称
 existkey = ''           #添加上传文件在空间中的名称
 nonexistkey = ''        #添加上传文件在空间中的名称
-existfile = ''		    #本地文件名(空间存在该文件)
-nonexistfile = ''		#本地文件名((空间不存在该文件))
+existfile = ''          #本地文件名(空间存在该文件)
+nonexistfile = ''       #本地文件名((空间不存在该文件))
 
 from ufile import filemanager
 
@@ -171,13 +171,13 @@ assert resp.status_code == 404
 * demo程序
 
 ~~~~~~~~~~~~~~~{.py}
-public_bucket = ''			#公共空间名称
-private_bucket = ''			#私有空间名称
-public_savefile = ''		#保存文件名
-private_savefile = ''		#保存文件名
-range_savefile = ''			#保存文件名
-put_key = ''				#文件在空间中的名称
-stream_key = ''				#文件在空间中的名称
+public_bucket = ''          #公共空间名称
+private_bucket = ''         #私有空间名称
+public_savefile = ''        #保存文件名
+private_savefile = ''       #保存文件名
+range_savefile = ''         #保存文件名
+put_key = ''                #文件在空间中的名称
+stream_key = ''             #文件在空间中的名称
 
 from ufile import filemanager
 
@@ -213,9 +213,9 @@ assert resp.status_code == 206
 * demo程序
 
 ~~~~~~~~~~~~~~~{.py}
-public_bucket = ''				#公共空间名称
-private_bucekt = ''				#私有空间名称
-delete_key = ''					#文件在空间中的名称
+public_bucket = ''              #公共空间名称
+private_bucekt = ''             #私有空间名称
+delete_key = ''                 #文件在空间中的名称
 
 from ufile import filemanager
 
@@ -243,9 +243,9 @@ assert resp.status_code == 204
 * demo程序
 
 ~~~~~~~~~~~~~~~{.py}
-public_bucket = ''		#公共空间名称
-sharding_key = ''		#上传文件在空间中的名称
-localfile = ''			#本地文件名
+public_bucket = ''      #公共空间名称
+sharding_key = ''       #上传文件在空间中的名称
+localfile = ''          #本地文件名
 
 from ufile import multipartuploadufile
 

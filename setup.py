@@ -33,7 +33,7 @@ setup(
     version=find_version("ufile/__init__.py"),
     description='UCloud UFile Python SDK',
     author_email='leo.li@ucloud.cn',
-    url="https://github.com/ufilesdk-dev/ufile-pythonsdk",
+    url="https://github.com/ucloud/ufile-sdk-python",
     platforms='any',
     packages=['ufile'],
     classifiers=[

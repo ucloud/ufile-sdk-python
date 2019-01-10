@@ -43,9 +43,9 @@ private_key = ''		#账户公私钥中的私钥
 ~~~~~~~~~~~~~~~{.py}
 from ufile import config
 
-#设置上传host后缀,外网可用 .ufile.ucloud.cn
+#设置上传host后缀,外网可用后缀形如 .cn-bj.ufileos.com（cn-bj为北京地区，其他地区具体后缀可见控制台：对象存储-单地域空间管理-存储空间域名）
 config.set_default(uploadsuffix='YOUR_UPLOAD_SUFFIX')
-#设置下载host后缀，比如CDN下载 .ufile.ucloud.com.cn
+#设置下载host后缀，普通下载后缀即上传后缀，CDN下载后缀为 .ufile.ucloud.com.cn
 config.set_default(downloadsuffix='YOUR_DOWNLOAD_SUFFIX')
 #设置请求连接超时时间，单位为秒
 config.set_default(connection_timeout=60)

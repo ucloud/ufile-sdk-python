@@ -8,8 +8,8 @@ _sys_info = '{0}: {1}'.format(platform.system(), platform.machine())
 _python_ver = platform.python_version()
 
 USER_AGENT = 'UCloud Python SDK {0} ({1} : Python/{2})'.format(__version__, _sys_info, _python_ver)
-UCLOUD_PROXY_SUFFIX = '.ufile.ucloud.cn'
-UCLOUD_DOWNLOAD_SUFFIX = '.ufile.ucloud.cn'
+UCLOUD_PROXY_SUFFIX = '.cn-bj.ufileos.com'
+UCLOUD_DOWNLOAD_SUFFIX = '.cn-bj.ufileos.com'
 UCLOUD_API_URL = 'http://api.ucloud.cn'
 BLOCKSIZE = 1024 * 1024 * 4
 

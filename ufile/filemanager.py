@@ -51,6 +51,11 @@ class FileManager(BaseUFile):
         if mime_type is None:
             mime_type = 'application/octet-stream'
         header['Content-Type'] = mime_type
+        if config.get_default('md5') == True:
+            m = hashlib.md5()
+            m.update(stream.getvalue())
+            header['Content-MD5'] = m.hexdigest()
+            stream.seek(0, os.SEEK_SET)
         authorization = self.authorization('put', bucket, key, header)
         header['Authorization'] = authorization
         url = ufile_put_url(bucket, key)
@@ -79,6 +84,12 @@ class FileManager(BaseUFile):
         mime_type = s(mimetype_from_file(localfile))
         file_size = os.path.getsize(localfile)
         header['Content-Type'] = mime_type
+        if config.get_default('md5') == True:
+            with open(localfile, 'rb') as data:
+                m = hashlib.md5()
+                m.update(data.read())
+                header['Content-MD5'] = m.hexdigest()
+                data.seek(0, os.SEEK_SET)
         authorization = self.authorization('put', bucket, key, header)
         header['Authorization'] = authorization
         if file_size!=0:
@@ -404,4 +415,4 @@ class FileManager(BaseUFile):
         ret,resp=self.head_file(bucket,remotekey)
         remote_etag=resp.etag.strip('\"')
         local_etag=file_etag(localfile,BLOCKSIZE)
-        return (remote_etag==local_etag) 
+        return (remote_etag==local_etag)

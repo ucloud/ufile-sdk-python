@@ -260,10 +260,12 @@ class ResponseInfo(object):
             self.content_range = None
             self.ret_code = None
             self.content = None
+            self.md5 = None
         else:
             self.status_code = response.status_code
             self.x_session_id = response.headers.get('X-SessionId')
             self.content_type = response.headers.get('Content-Type')
+            self.md5 = response.headers.get('Content-MD5')
             self.content_length = response.headers.get('Content-Length')
             content_length = response.headers.get('content-range')
             self.content = None if content_consumed else response.content

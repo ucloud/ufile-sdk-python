@@ -205,6 +205,39 @@ def _getfilelist(url, header, param):
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
 
+def _restore_file(url, header):
+    """
+    解冻冷存文件请求
+
+    :param url:  string类型, 解冻请求的url
+    :param header: dict 类型，键值对类型分别为string类型，HTTP请求头
+    :return: ret: 如果http状态码不为[200, 204, 206]之一则返回None，否则如果服务器返回json信息则返回dict类型，键值对类型分别为string, unicode string类型，否则返回空的dict
+    :return:  ResponseInfo: 响应的具体信息，UCloud UFile 服务器返回信息或者网络链接异常
+    """
+
+    try:
+        response = requests.put(url, headers=header, timeout=config.get_default('connection_timeout'))
+    except requests.RequestException as e:
+        return None, ResponseInfo(None, e)
+    return __return_wraper(response)
+
+def _classswitch_file(url, header, params):
+    """
+    文件存储类型转换请求
+
+    :param url:string类型，文件存储类型转换的url
+    :param header: dict类型，http 请求header，键值对类型分别为string，比如{'User-Agent': 'Google Chrome'}
+    :param params: dict类型，http 请求的查询参数，键值对类型分别为string类型
+    :return: ret: return message, None if response status code not in [200, 204, 206] else a dict-like object with response body
+    :return: ResponseInfo: UCloud UFile server response info
+    """
+
+    try:
+        response = requests.put(url, params=params, headers=header, timeout=config.get_default('connection_timeout'))
+    except requests.RequestException as e:
+        return None, ResponseInfo(None, e)
+    return __return_wraper(response)
+
 
 def _bucket_request(url, param, header):
     """

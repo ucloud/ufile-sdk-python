@@ -19,6 +19,7 @@ _config = {
     'upload_suffix': UCLOUD_PROXY_SUFFIX,
     'download_suffix': UCLOUD_DOWNLOAD_SUFFIX,
     'user_agent': USER_AGENT,
+    'md5': False,
 }
 
 
@@ -29,7 +30,7 @@ def get_default(key):
     global _config
     return None if key not in _config else _config[key]
 
-def set_default(connection_timeout=None, expires=None, user_agent=None, uploadsuffix=None, downloadsuffix=None):
+def set_default(connection_timeout=None, expires=None, user_agent=None, uploadsuffix=None, downloadsuffix=None, md5=None):
     """
     设置默认配置
 
@@ -38,6 +39,7 @@ def set_default(connection_timeout=None, expires=None, user_agent=None, uploadsu
     :user_agent: string类型
     :uploadsuffix: string类型，上传地址后缀
     :downloadsuffix: string类型，下载地址后缀
+    :md5: 布尔类型，上传文件是否携带MD5
     """
     global _config
     if connection_timeout:
@@ -50,3 +52,5 @@ def set_default(connection_timeout=None, expires=None, user_agent=None, uploadsu
         _config['upload_suffix'] = uploadsuffix
     if downloadsuffix and isinstance(downloadsuffix, str):
         _config['download_suffix'] = downloadsuffix
+    if md5 != None:
+        _config['md5'] = md5

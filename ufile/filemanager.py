@@ -6,8 +6,8 @@ import time
 import hashlib
 import json   
 from .baseufile import BaseUFile
-from .httprequest import _put_stream, _put_file, _post_file, ResponseInfo, _uploadhit_file, _download_file, _delete_file, _getfilelist,_head_file
-from .util import _check_dict, ufile_put_url, ufile_post_url, file_etag, ufile_uploadhit_url, ufile_getfilelist_url, mimetype_from_file
+from .httprequest import _put_stream, _put_file, _post_file, ResponseInfo, _uploadhit_file, _download_file, _delete_file, _getfilelist,_head_file, _restore_file, _classswitch_file
+from .util import _check_dict, ufile_put_url, ufile_post_url, file_etag, ufile_uploadhit_url, ufile_getfilelist_url, mimetype_from_file, ufile_restore_url, ufile_classswitch_url
 from .logger import logger
 from .compact import b, s, u, url_parse
 from . import config
@@ -51,6 +51,11 @@ class FileManager(BaseUFile):
         if mime_type is None:
             mime_type = 'application/octet-stream'
         header['Content-Type'] = mime_type
+        if config.get_default('md5') == True:
+            m = hashlib.md5()
+            m.update(stream.getvalue())
+            header['Content-MD5'] = m.hexdigest()
+            stream.seek(0, os.SEEK_SET)
         authorization = self.authorization('put', bucket, key, header)
         header['Authorization'] = authorization
         url = ufile_put_url(bucket, key)
@@ -79,6 +84,12 @@ class FileManager(BaseUFile):
         mime_type = s(mimetype_from_file(localfile))
         file_size = os.path.getsize(localfile)
         header['Content-Type'] = mime_type
+        if config.get_default('md5') == True:
+            with open(localfile, 'rb') as data:
+                m = hashlib.md5()
+                m.update(data.read())
+                header['Content-MD5'] = m.hexdigest()
+                data.seek(0, os.SEEK_SET)
         authorization = self.authorization('put', bucket, key, header)
         header['Authorization'] = authorization
         if file_size!=0:
@@ -404,4 +415,59 @@ class FileManager(BaseUFile):
         ret,resp=self.head_file(bucket,remotekey)
         remote_etag=resp.etag.strip('\"')
         local_etag=file_etag(localfile,BLOCKSIZE)
-        return (remote_etag==local_etag) 
+        return (remote_etag==local_etag)
+
+    def restore_file(self,bucket,key,header=None):
+        """
+        解冻冷存文件方法
+
+        :param bucket: string类型, 空间名称
+        :param key:  string类型, 文件在空间中的名称
+        :param header: dict类型，http 请求header，键值对类型分别为string，比如{'User-Agent': 'Google Chrome'}
+        :return: ret: 如果http状态码为[200, 204, 206]之一则返回None，否则如果服务器返回json信息则返回dict类型，键值对类型分别为string, unicode string类型，否则返回空的dict
+        :return:  ResponseInfo: 响应的具体信息，UCloud UFile 服务器返回信息或者网络链接异常
+        """
+        if header is None:
+            header=dict()
+        else:
+            _check_dict(header)
+        if 'User-Agent' not in header:
+            header['User-Agent'] = config.get_default('user_agent')
+
+        authorization = self.authorization('put', bucket, key, header)
+        header['Authorization'] = authorization
+
+        logger.info('start restore file {0} in bucket {1}'.format(key, bucket))
+        url = ufile_restore_url(bucket, key)
+
+        return _restore_file(url, header)
+
+    def class_switch_file(self,bucket,key,storageclass,header=None):
+        """
+        文件存储类型转换方法
+
+        :param bucket: string类型, 空间名称
+        :param key:  string类型, 文件在空间中的名称
+        :param storageclass:  string类型, 文件目标存储类型
+        :param header: dict类型，http 请求header，键值对类型分别为string，比如{'User-Agent': 'Google Chrome'}
+        :return: ret: 如果http状态码为[200, 204, 206]之一则返回None，否则如果服务器返回json信息则返回dict类型，键值对类型分别为string, unicode string类型，否则返回空的dict
+        :return:  ResponseInfo: 响应的具体信息，UCloud UFile 服务器返回信息或者网络链接异常
+        """
+        if header is None:
+            header=dict()
+        else:
+            _check_dict(header)
+        if 'User-Agent' not in header:
+            header['User-Agent'] = config.get_default('user_agent')
+
+        authorization = self.authorization('put', bucket, key, header)
+        header['Authorization'] = authorization
+
+        # parameter
+        params = {'storageClass': storageclass}
+
+        logger.info('start switch file {0} storage class in bucket {1}'.format(key, bucket))
+        url = ufile_classswitch_url(bucket, key)
+
+        return _classswitch_file(url, header, params)
+

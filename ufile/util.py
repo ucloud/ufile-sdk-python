@@ -218,3 +218,24 @@ def mimetype_from_buffer(stream):
     :return: string类型，获取流对象的mimetype
     """
     return 'application/octet-stream'
+
+def ufile_restore_url(bucket, key):
+    """
+    解冻冷存文件的url
+
+    :param bucket: string类型, 待创建的空间名称
+    :param key:  string类型, 在空间中的文件名
+    :return: string类型, 秒传UFile的url
+    """
+    return 'http://{0}{1}/{2}?restore'.format(bucket, config.get_default('upload_suffix'), key)
+
+def ufile_classswitch_url(bucket, key):
+    """
+    文件存储类型转换的url
+
+    :param bucket: string类型, 待创建的空间名称
+    :param key:  string类型, 在空间中的文件名
+    :return: string类型, 秒传UFile的url
+    """
+    return 'http://{0}{1}/{2}'.format(bucket, config.get_default('upload_suffix'), key)
+

@@ -51,6 +51,8 @@ config.set_default(downloadsuffix='YOUR_DOWNLOAD_SUFFIX')
 config.set_default(connection_timeout=60)
 #设置私有bucket下载链接有效期,单位为秒
 config.set_default(expires=60)
+#设置上传文件是否校验md5
+config.set_default(md5=True)
 ~~~~~~~~~~~~~~~
 
 ### 设置日志文件
@@ -283,6 +285,73 @@ else:   # 服务器或者客户端错误
 | 200 | 文件或者数据上传成功 |
 | 400 | 上传到不存在的空间 |
 | 403 | API公私钥错误 |
+| 401 | 上传凭证错误 |
+
+### 支持解冻
+
+* demo 程序
+
+~~~~~~~~~~~~~~~{.py}
+public_bucket = ''		#公共空间名称
+localfile = ''			#本地文件名
+put_key = ''			#上传文件在空间中的名称
+ARCHIVE = 'ARCHIVE'  #冷存文件类型
+
+from ufile import filemanager
+
+putufile_handler = filemanager.FileManager(public_key, private_key)
+restorefile_handler = filemanager.FileManager(public_key, private_key)
+
+# 普通上传冷存文件至公共空间
+ret, resp = putufile_handler.putfile(public_bucket, put_key, localfile, ARCHIVE, header=None)
+assert rest.status_code == 200
+
+# 解冻冷存文件
+ret, resp = restorefile_handler.restore_file(public_bucket, put_key)
+assert resp.status_code == 200
+~~~~~~~~~~~~~~~
+
+* HTTP 返回状态码
+
+| 状态码 | 描述 |
+| -----  | ---- |
+| 200 | 文件解冻成功 |
+| 400 | 不存在的空间 或 文件类型非冷存 |
+| 403 | API公私钥错误 |
+| 401 | 上传凭证错误 |
+
+### 支持文件类型转换
+
+* demo 程序
+
+~~~~~~~~~~~~~~~{.py}
+public_bucket = ''		#公共空间名称
+localfile = ''			#本地文件名
+put_key = ''			#上传文件在空间中的名称
+STANDARD = 'STANDARD'  #标准文件类型
+IA = 'IA'  #低频文件类型
+
+from ufile import filemanager
+
+putufile_handler = filemanager.FileManager(public_key, private_key)
+classswitch_handler = filemanager.FileManager(public_key, private_key)
+
+# 普通上传文件至公共空间
+ret, resp = putufile_handler.putfile(public_bucket, put_key, localfile, STANDARD, header=None)
+assert rest.status_code == 200
+
+# 标准文件类型转换为低频文件类型
+ret, resp = classswitch_handler.class_switch_file(public_bucket, put_key, IA)
+assert resp.status_code == 200
+~~~~~~~~~~~~~~~
+
+* HTTP 返回状态码
+
+| 状态码 | 描述 |
+| -----  | ---- |
+| 200 | 文件转换类型成功 |
+| 400 | 不存在的空间 |
+| 403 | API公私钥错误 或 冷存文件尚未解冻不允许转换文件类型 |
 | 401 | 上传凭证错误 |
 
 ### 比较本地文件和远程文件etag

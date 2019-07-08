@@ -2,11 +2,12 @@
 
 import unittest
 import os
-from ufile import filemanager
+from ufile import filemanager, multipartuploadufile
 from ufile.compact import b
 from ufile.logger import logger, set_log_file
 from ufile.config import BLOCKSIZE, get_default
 from ufile.compact import BytesIO,b
+from common import *
 
 set_log_file()
 public_key = '<your public key>'              #添加自己的账户公钥
@@ -20,7 +21,7 @@ ARCHIVE = 'ARCHIVE'
 #自动生成随机txt文档,文件设置较大时随机数生成效率较低，也可自定义本地大文档测试
 big_local_file =  './sharding.txt'
 content = random_bytes(5*1024*1024)                #此处设置文件大小
-with open(local_file, 'wb') as fileobj:
+with open(big_local_file, 'wb') as fileobj:
     fileobj.write(content)
 
 small_local_file = './example.jpg'
@@ -50,11 +51,11 @@ class ArchiveOperateTestCase(unittest.TestCase):
 
         # upload file to public bucket
         logger.info('\nstart put small file to public bucket')
-        ret, resp = self.putufile_handler.putfile(public_bucket, put_small_key, small_local_file, header)
+        ret, resp = self.putufile_handler.putfile(public_bucket, put_ia_key, small_local_file, header)
         assert resp.status_code == 200
         # put small file to private bucket
         logger.info('\nstart put small file to private bucket')
-        ret, resp = self.putufile_handler.putfile(private_bucket, put_small_key, small_local_file, header)
+        ret, resp = self.putufile_handler.putfile(private_bucket, put_ia_key, small_local_file, header)
         assert resp.status_code == 200
 
     def test_upload_archive_ufile(self):
@@ -66,12 +67,12 @@ class ArchiveOperateTestCase(unittest.TestCase):
 
         # upload big file to public bucket
         logger.info('start sharding upload big file to public bucket')
-        ret, resp = self.multipartuploadufile_handler.uploadfile(public_bucket, sharding_file_key, local_file, header)
+        ret, resp = self.multipartuploadufile_handler.uploadfile(public_bucket, mput_archive_key, big_local_file, header=header)
         print(resp.error)
         assert resp.status_code == 200
         # upload big file to private bucket
         logger.info('start sharding upload big file to private bucket')
-        ret, resp = self.multipartuploadufile_handler.uploadfile(private_bucket, sharding_file_key, local_file, header)
+        ret, resp = self.multipartuploadufile_handler.uploadfile(private_bucket, mput_archive_key, big_local_file, header=header)
         print(resp.error)
         assert resp.status_code == 200
 
@@ -84,11 +85,11 @@ class ArchiveOperateTestCase(unittest.TestCase):
 
         # post small file to public bucket
         logger.info('\nstart post small file to public bucket')
-        ret, resp = self.postfile_handler.postfile(public_bucket, post_small_key, small_local_file, header)
+        ret, resp = self.postfile_handler.postfile(public_bucket, post_standard_key, small_local_file, header)
         assert resp.status_code == 200
         # post small file to private bucket
         logger.info('\nstart post small file to private bucket')
-        ret, resp = self.postfile_handler.postfile(private_bucket, post_small_key, small_local_file, header)
+        ret, resp = self.postfile_handler.postfile(private_bucket, post_standard_key, small_local_file, header)
         assert resp.status_code == 200
 
     def test_restore_file(self):
@@ -96,7 +97,7 @@ class ArchiveOperateTestCase(unittest.TestCase):
         self.restorefile_handler.set_keys(public_key, private_key)
         # restore archive file in public bucket
         logger.info('start restore archive file to public bucket')
-        ret, resp = self.restorefile_handler.restore_file(public_bucket, sharding_file_key)
+        ret, resp = self.restorefile_handler.restore_file(public_bucket, mput_archive_key)
         print(resp.error)
         assert resp.status_code == 200
 
@@ -105,7 +106,7 @@ class ArchiveOperateTestCase(unittest.TestCase):
         self.classswitch_handler.set_keys(public_key, private_key)
         # file storage class switch to IA in private bucket
         logger.info('start switch file storage class in private bucket')
-        ret, resp = self.classswitch_handler.restore_file(private_bucket, small_local_file, IA)
+        ret, resp = self.classswitch_handler.class_switch_file(private_bucket, post_standard_key, IA)
         print(resp.error)
         assert resp.status_code == 200
 

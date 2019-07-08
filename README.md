@@ -295,7 +295,7 @@ else:   # 服务器或者客户端错误
 public_bucket = ''		#公共空间名称
 localfile = ''			#本地文件名
 put_key = ''			#上传文件在空间中的名称
-ARCHIVE = 'ARCHIVE'  #冷存文件类型
+ARCHIVE = 'ARCHIVE'		#冷存文件类型
 
 from ufile import filemanager
 
@@ -328,8 +328,8 @@ assert resp.status_code == 200
 public_bucket = ''		#公共空间名称
 localfile = ''			#本地文件名
 put_key = ''			#上传文件在空间中的名称
-STANDARD = 'STANDARD'  #标准文件类型
-IA = 'IA'  #低频文件类型
+STANDARD = 'STANDARD'		#标准文件类型
+IA = 'IA'			#低频文件类型
 
 from ufile import filemanager
 

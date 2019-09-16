@@ -10,6 +10,29 @@ from .logger import logger
 from .compact import s
 from . import config
 import time
+import multiprocessing
+
+
+def _partup(__bucket,__key,uploadid,pausepartnumber,retrycount,retryinterval):
+    url = shardingupload_url(__bucket, __key, uploadid, pausepartnumber)
+    ret = None
+    resp = None
+    for index in range(retrycount):
+        logger.info('try {0} time sharding upload sharding {1}'.format(index + 1, pausepartnumber))
+        logger.info('sharding url:{0}'.format(url))
+        ret, resp = _shardingupload(url, data, self.__header)
+        if not resp.ok():
+            logger.error('failed {0} time when upload sharding {1}.error message: {2}, uploadid: {3}'.format(index + 1, pausepartnumber, resp.error, uploadid))
+            if index < retrycount - 1:
+                time.sleep(retryinterval)
+        else:
+            break
+    if not resp.ok():
+        logger.error('upload sharding {0} failed. uploadid: {1}'.format(pausepartnumber, uploadid))
+        return ret, resp
+    logger.info('upload sharding {0} succeed.etag:{1}, uploadid: {2}'.format(pausepartnumber, resp.etag, uploadid))
+    return resp
+     
 
 
 class MultipartUploadUFile(BaseUFile):
@@ -94,27 +117,20 @@ class MultipartUploadUFile(BaseUFile):
         self.__header['Content-Type'] = self.__mimetype
         authorization = self.authorization('put', self.__bucket, self.__key, self.__header)
         self.__header['Authorization'] = authorization
-
+        
+        partresult = []
+        ppool = multiprocessing.Pool(10)
         for data in _file_iter(self.__stream, self.blocksize):
-            url = shardingupload_url(self.__bucket, self.__key, self.uploadid, self.pausepartnumber)
-            ret = None
-            resp = None
-            for index in range(retrycount):
-                logger.info('try {0} time sharding upload sharding {1}'.format(index + 1, self.pausepartnumber))
-                logger.info('sharding url:{0}'.format(url))
-                ret, resp = _shardingupload(url, data, self.__header)
-                if not resp.ok():
-                    logger.error('failed {0} time when upload sharding {1}.error message: {2}, uploadid: {3}'.format(index + 1, self.pausepartnumber, resp.error, self.uploadid))
-                    if index < retrycount - 1:
-                        time.sleep(retryinterval)
-                else:
-                    break
-            if not resp.ok():
-                logger.error('upload sharding {0} failed. uploadid: {1}'.format(self.pausepartnumber, self.uploadid))
-                return ret, resp
-            logger.info('upload sharding {0} succeed.etag:{1}, uploadid: {2}'.format(self.pausepartnumber, resp.etag, self.uploadid))
+            partresult.append(pool.apply_async(_partup, (self.__bucket,self.__key, self.uploadid, self.pausepartnumber,retrycount,retryinterval)))
+            
             self.pausepartnumber += 1
-            self.etaglist.append(resp.etag)
+        
+        ppool.close()
+        ppool.join()
+
+        for res in partresult:
+            self.etaglist.append(res.etag)
+            
         logger.info('start finish sharding request.')
         ret, resp = self.__finishupload()
         if not resp.ok():
@@ -122,6 +138,8 @@ class MultipartUploadUFile(BaseUFile):
         else:
             logger.info('mulitpart upload succeed. uploadid: {0}, key: {1} SUCCEED!!!'.format(self.uploadid, self.__key))
         return ret, resp
+    
+    
 
     def uploadfile(self, bucket, key, localfile, retrycount=3, retryinterval=5, header=None):
         """

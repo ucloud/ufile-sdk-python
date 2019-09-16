@@ -13,14 +13,25 @@ import time
 import multiprocessing
 
 
-def _partup(data,__bucket,__key,uploadid,pausepartnumber,__header,retrycount,retryinterval):
-    url = shardingupload_url(__bucket, __key, uploadid, pausepartnumber)
+def _partup(data,bucket,key,uploadid,pausepartnumber,header,retrycount=3,retryinterval=5):
+    """
+    多进程上传
+    :param data : 分片数据
+    :param bucket: string类型，空间名称
+    :param key: string类型，文件在空间中的名称
+    :param uploadid : 
+    :param pausepartnumber :
+    :param retrycount: integer 类型，分片重传次数
+    :param retryinterval: integer 类型，同个分片失败重传间隔，单位秒
+    :param header: dict类型，http 请求header，键值对类型分别为string，比如{'User-Agent': 'Google Chrome'}
+    """
+    url = shardingupload_url(bucket, key, uploadid, pausepartnumber)
     ret = None
     resp = None
     for index in range(retrycount):
         logger.info('try {0} time sharding upload sharding {1}'.format(index + 1, pausepartnumber))
         logger.info('sharding url:{0}'.format(url))
-        ret, resp = _shardingupload(url, data, __header)
+        ret, resp = _shardingupload(url, data, header)
         if not resp.ok():
             logger.error('failed {0} time when upload sharding {1}.error message: {2}, uploadid: {3}'.format(index + 1, pausepartnumber, resp.error, uploadid))
             if index < retrycount - 1:

@@ -13,14 +13,14 @@ import time
 import multiprocessing
 
 
-def _partup(__bucket,__key,uploadid,pausepartnumber,retrycount,retryinterval):
+def _partup(data,__bucket,__key,uploadid,pausepartnumber,__header,retrycount,retryinterval):
     url = shardingupload_url(__bucket, __key, uploadid, pausepartnumber)
     ret = None
     resp = None
     for index in range(retrycount):
         logger.info('try {0} time sharding upload sharding {1}'.format(index + 1, pausepartnumber))
         logger.info('sharding url:{0}'.format(url))
-        ret, resp = _shardingupload(url, data, self.__header)
+        ret, resp = _shardingupload(url, data, __header)
         if not resp.ok():
             logger.error('failed {0} time when upload sharding {1}.error message: {2}, uploadid: {3}'.format(index + 1, pausepartnumber, resp.error, uploadid))
             if index < retrycount - 1:
@@ -31,7 +31,7 @@ def _partup(__bucket,__key,uploadid,pausepartnumber,retrycount,retryinterval):
         logger.error('upload sharding {0} failed. uploadid: {1}'.format(pausepartnumber, uploadid))
         return ret, resp
     logger.info('upload sharding {0} succeed.etag:{1}, uploadid: {2}'.format(pausepartnumber, resp.etag, uploadid))
-    return resp
+    return resp.etag
      
 
 
@@ -121,15 +121,15 @@ class MultipartUploadUFile(BaseUFile):
         partresult = []
         ppool = multiprocessing.Pool(10)
         for data in _file_iter(self.__stream, self.blocksize):
-            partresult.append(pool.apply_async(_partup, (self.__bucket,self.__key, self.uploadid, self.pausepartnumber,retrycount,retryinterval)))
-            
+            partresult.append(ppool.apply_async(_partup, (data,self.__bucket,self.__key, self.uploadid, self.pausepartnumber,self.__header,retrycount,retryinterval)))
+
             self.pausepartnumber += 1
-        
+
         ppool.close()
         ppool.join()
 
         for res in partresult:
-            self.etaglist.append(res.etag)
+            self.etaglist.append(res.get())
             
         logger.info('start finish sharding request.')
         ret, resp = self.__finishupload()

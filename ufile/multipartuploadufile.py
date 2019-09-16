@@ -130,7 +130,7 @@ class MultipartUploadUFile(BaseUFile):
         self.__header['Authorization'] = authorization
         
         partresult = []
-        ppool = multiprocessing.Pool(10)
+        ppool = multiprocessing.Pool(multiprocessing.cpu_count())
         for data in _file_iter(self.__stream, self.blocksize):
             partresult.append(ppool.apply_async(_partup, (data,self.__bucket,self.__key, self.uploadid, self.pausepartnumber,self.__header,retrycount,retryinterval)))
 

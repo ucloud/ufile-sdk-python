@@ -90,7 +90,7 @@ assert resp.status_code == 200
 from io import BytesIO
 bio = BytesIO(u'Do be a good man'.encode('utf-8'))  #二进制数据流
 stream_key = ''                         #上传数据流在空间中的名称
-ret, resp = putufile_handler.putfile(public_bucket, stream_key, bio)
+ret, resp = putufile_handler.putstream(public_bucket, stream_key, bio)
 ~~~~~~~~~~~~~~~
 
 * HTTP 返回状态码

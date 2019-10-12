@@ -371,6 +371,22 @@ else:
     logger.info('\netag are different!')
 ~~~~~~~~~~~~~~~
 
+### 获取文件列表
+
+~~~~~~~~~~~~~~~{.py}
+bucket = ''		#空间名称
+
+from ufile import filemanager
+
+getfilelist_hander = filemanager.FileManager(public_key, private_key)
+
+prefix='' #文件前缀
+limit=10  #文件列表数目
+marker='' #文件列表起始位置
+ret, resp = getfilelist_hander.getfilelist(bucket, prefix=prefix, limit=limit, marker=marker)
+assert resp.status_code == 200
+~~~~~~~~~~~~~~~
+
 ### 空间管理
 
 ~~~~~~~~~~~~~~~{.py}
@@ -396,11 +412,4 @@ print(ret)
 # 更改bucket属性
 bucketname = '' # 待更改的私有空间名称
 bucketmanager_handler.updatebucket(bucketname, 'public'):
-
-# 获得空间文件列表
-bucketname = '' #待查询的空间名称
-offset = 0      #文件列表起始位置
-limit = 20      #获取文件数量
-ret, resp = bucketmanager_handler.getfilelist(bucketname, offset, limit)
-print(ret)
 ~~~~~~~~~~~~~~~

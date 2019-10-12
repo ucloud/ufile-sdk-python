@@ -175,7 +175,7 @@ class BucketManager(object):
 
     def getfilelist(self, bucket, offset=0, limit=20, header=None, projectid=None):
         """
-        获取空间中文件列表
+        获取空间中文件列表（该接口已不再使用，获取文件列表请使用filemanager中的同名接口）
 
         :param bucket: string类型,空间名称
         :param offset: integer类型，文件列表偏移位置

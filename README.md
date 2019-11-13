@@ -80,7 +80,7 @@ putufile_handler = filemanager.FileManager(public_key, private_key)
 
 # 普通上传文件至公共空间
 ret, resp = putufile_handler.putfile(public_bucket, put_key, localfile, header=None)
-assert rest.status_code == 200
+assert resp.status_code == 200
 
 # 普通上传文件至私有空间
 ret, resp = putufile_handler.putfile(private_bucket, put_key, localfile, header=None)

@@ -6,8 +6,8 @@ import time
 import hashlib
 import json   
 from .baseufile import BaseUFile
-from .httprequest import _put_stream, _put_file, _post_file, ResponseInfo, _uploadhit_file, _download_file, _delete_file, _getfilelist,_head_file, _restore_file, _classswitch_file
-from .util import _check_dict, ufile_put_url, ufile_post_url, file_etag, ufile_uploadhit_url, ufile_getfilelist_url, mimetype_from_file, ufile_restore_url, ufile_classswitch_url
+from .httprequest import _put_stream, _put_file, _post_file, ResponseInfo, _uploadhit_file, _download_file, _delete_file, _getfilelist,_head_file, _restore_file, _classswitch_file, _copy_file, _rename_file
+from .util import _check_dict, ufile_put_url, ufile_post_url, file_etag, ufile_uploadhit_url, ufile_getfilelist_url, mimetype_from_file, ufile_restore_url, ufile_classswitch_url, ufile_copy_url, ufile_rename_url
 from .logger import logger
 from .compact import b, s, u, url_parse
 from . import config
@@ -470,4 +470,67 @@ class FileManager(BaseUFile):
         url = ufile_classswitch_url(bucket, key)
 
         return _classswitch_file(url, header, params)
+
+    def copy(self, bucket, key, srcbucket, srckey, header=None):
+        """
+        尝试拷贝文件到UFile空间
+
+        :param bucket: string类型，上传空间名称
+        :param key:  string 类型，新文件在空间中的名称
+        :param srcbucket: string类型，源文件所在空间名称
+        :param srckey: string类型，源文件名称
+        :param header: dict类型，http 请求header，键值对类型分别为string，比如{'User-Agent': 'Google Chrome'}
+        :return: ret: 如果http状态码为[200, 204, 206]之一则返回None，否则如果服务器返回json信息则返回dict类型，键值对类型分别为string, unicode string类型，否则返回空的dict
+        :return:  ResponseInfo: 响应的具体信息，UCloud UFile 服务器返回信息或者网络链接异常
+        """
+
+        if header is None:
+            header = dict()
+        _check_dict(header)
+        if 'User-Agent' not in header:
+            header['User-Agent'] = config.get_default('user_agent')
+
+        # update request header
+        header['X-Ufile-Copy-Source'] = "/" + srcbucket + "/" + srckey
+        header['Content-Length'] = str(0)
+        authorization = self.authorization('put', bucket, key, header)
+        header['Authorization'] = authorization
+
+        url = ufile_copy_url(bucket, key)
+
+        logger.info('start copy {0} in {1} to {2} in {3}'.format(srckey, srcbucket, key, bucket))
+        logger.info('request url: {0}'.format(url))
+
+        return _copy_file(url, header)
+
+    def rename(self, bucket, key, newkey, force='true', header=None):
+        """
+        重命名文件方法
+
+        :param bucket: string类型, 空间名称
+        :param key:  string类型, 源文件在空间中的名称
+        :param newkey:  string类型, 文件重命名后的新名称
+        :param force:  string类型, 是否强行覆盖文件，值为'true'会覆盖，其他值则不会
+        :param header: dict类型，http 请求header，键值对类型分别为string，比如{'User-Agent': 'Google Chrome'}
+        :return: ret: 如果http状态码为[200, 204, 206]之一则返回None，否则如果服务器返回json信息则返回dict类型，键值对类型分别为string, unicode string类型，否则返回空的dict
+        :return:  ResponseInfo: 响应的具体信息，UCloud UFile 服务器返回信息或者网络链接异常
+        """
+        if header is None:
+            header=dict()
+        else:
+            _check_dict(header)
+        if 'User-Agent' not in header:
+            header['User-Agent'] = config.get_default('user_agent')
+
+        authorization = self.authorization('put', bucket, key, header)
+        header['Authorization'] = authorization
+
+        # parameter
+        params = {'newFileName': newkey,
+                  'force': force}
+
+        logger.info('start rename {0} in bucket {1}'.format(key, bucket))
+        url = ufile_rename_url(bucket, key)
+
+        return _rename_file(url, header, params)
 

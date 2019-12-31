@@ -508,8 +508,8 @@ class FileManager(BaseUFile):
         重命名文件方法
 
         :param bucket: string类型, 空间名称
-        :param key:  string类型, 文件在空间中的名称
-        :param newkey:  string类型, 文件修改后的新名称
+        :param key:  string类型, 源文件在空间中的名称
+        :param newkey:  string类型, 文件重命名后的新名称
         :param force:  string类型, 是否强行覆盖文件，值为'true'会覆盖，其他值则不会
         :param header: dict类型，http 请求header，键值对类型分别为string，比如{'User-Agent': 'Google Chrome'}
         :return: ret: 如果http状态码为[200, 204, 206]之一则返回None，否则如果服务器返回json信息则返回dict类型，键值对类型分别为string, unicode string类型，否则返回空的dict

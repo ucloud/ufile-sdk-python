@@ -387,6 +387,62 @@ ret, resp = getfilelist_hander.getfilelist(bucket, prefix=prefix, limit=limit, m
 assert resp.status_code == 200
 ~~~~~~~~~~~~~~~
 
+### 支持拷贝
+
+* demo 程序
+
+~~~~~~~~~~~~~~~{.py}
+public_bucket = ''		#公共空间名称
+key = ''			#目的文件在空间中的名称
+srcbucket = ''			#源文件所在空间名称
+srckey = ''		        #源文件名称
+
+from ufile import filemanager
+
+copyufile_handler = filemanager.FileManager(public_key, private_key)
+
+# 拷贝文件
+ret, resp = copyufile_handler.copy(public_bucket, key, srcbucket, srckey)
+assert resp.status_code == 200
+~~~~~~~~~~~~~~~
+
+* HTTP 返回状态码
+
+| 状态码 | 描述 |
+| -----  | ---- |
+| 200 | 文件拷贝成功 |
+| 400 | 不存在的空间 |
+| 403 | API公私钥错误 |
+| 401 | 上传凭证错误 |
+
+### 支持重命名
+
+* demo 程序
+
+~~~~~~~~~~~~~~~{.py}
+public_bucket = ''		#公共空间名称
+key = ''			#源文件在空间中的名称
+newkey = ''			#目的文件在空间中的名称
+
+from ufile import filemanager
+
+renameufile_handler = filemanager.FileManager(public_key, private_key)
+
+# 拷贝文件
+ret, resp = renameufile_handler.rename(public_bucket, key, newkey, 'true')
+assert resp.status_code == 200
+~~~~~~~~~~~~~~~
+
+* HTTP 返回状态码
+
+| 状态码 | 描述 |
+| -----  | ---- |
+| 200 | 文件重命名成功 |
+| 400 | 不存在的空间 |
+| 403 | API公私钥错误 |
+| 401 | 上传凭证错误 |
+| 406 | 新文件名已存在 |
+
 ### 空间管理
 
 ~~~~~~~~~~~~~~~{.py}

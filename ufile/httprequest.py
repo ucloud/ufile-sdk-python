@@ -238,6 +238,38 @@ def _classswitch_file(url, header, params):
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
 
+def _copy_file(url, header):
+    """
+    拷贝文件到空间
+
+    :param url:string类型， 拷贝文件的url
+    :param header: dict类型，http 请求header，键值对类型分别为string，比如{'User-Agent': 'Google Chrome'}
+    :return: ret: return message, None if response status code not in [200, 204, 206] else a dict-like object with response body
+    :return: ResponseInfo: UCloud UFile server response info
+    """
+
+    try:
+        response = requests.put(url, headers=header, timeout=config.get_default('connection_timeout'))
+    except requests.RequestException as e:
+        return None, ResponseInfo(None, e)
+    return __return_wraper(response)
+
+def _rename_file(url, header, params):
+    """
+    重命名文件到空间
+
+    :param url:string类型， 重命名文件的url
+    :param header: dict类型，http 请求header，键值对类型分别为string，比如{'User-Agent': 'Google Chrome'}
+    :param params: dict类型，http 请求的查询参数，键值对类型分别为string类型
+    :return: ret: return message, None if response status code not in [200, 204, 206] else a dict-like object with response body
+    :return: ResponseInfo: UCloud UFile server response info
+    """
+
+    try:
+        response = requests.put(url, params=params, headers=header, timeout=config.get_default('connection_timeout'))
+    except requests.RequestException as e:
+        return None, ResponseInfo(None, e)
+    return __return_wraper(response)
 
 def _bucket_request(url, param, header):
     """

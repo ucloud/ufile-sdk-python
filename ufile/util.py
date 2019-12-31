@@ -225,7 +225,7 @@ def ufile_restore_url(bucket, key):
 
     :param bucket: string类型, 待创建的空间名称
     :param key:  string类型, 在空间中的文件名
-    :return: string类型, 秒传UFile的url
+    :return: string类型, 解冻文件的url
     """
     return 'http://{0}{1}/{2}?restore'.format(bucket, config.get_default('upload_suffix'), key)
 
@@ -235,7 +235,27 @@ def ufile_classswitch_url(bucket, key):
 
     :param bucket: string类型, 待创建的空间名称
     :param key:  string类型, 在空间中的文件名
-    :return: string类型, 秒传UFile的url
+    :return: string类型, 类型转换的url
     """
     return 'http://{0}{1}/{2}'.format(bucket, config.get_default('upload_suffix'), key)
 
+def ufile_copy_url(bucket, key):
+    """
+    拷贝文件的url
+
+    :param bucket: string类型, 待创建的空间名称
+    :param key:  string类型, 在空间中的目标文件名
+    :return: string类型, 拷贝文件的url
+    """
+    return 'http://{0}{1}/{2}'.format(bucket, config.get_default('upload_suffix'), key)
+
+def ufile_rename_url(bucket, key):
+    """
+    重命名文件的url
+
+    :param bucket: string类型, 待创建的空间名称
+    :param key:  string类型, 在空间中的源文件名
+    :param newkey:  string类型, 在空间中的目标文件名
+    :return: string类型, 拷贝文件的url
+    """
+    return 'http://{0}{1}/{2}'.format(bucket, config.get_default('upload_suffix'), key)

@@ -4,7 +4,7 @@ ufile 文件上传下载工具, 支持 mysql 备份不落地流式上传 ufile
 1. python3 及以上版本
 2. 安装python requests 库 
 
-安装参考：https://github.com/ufilesdk-dev/ufile-pythonsdk
+安装参考：https://github.com/ucloud/ufile-sdk-python
 
 
 ## 说明：

@@ -33,12 +33,12 @@ class MultipartUploadUFileTestCase(unittest.TestCase):
 
         # upload big file to public bucket
         logger.info('start sharding upload big file to public bucket')
-        ret, resp = self.multipartuploadufile_handler.uploadfile(public_bucket, sharding_file_key, local_file)
+        ret, resp = self.multipartuploadufile_handler.uploadfile(public_bucket, sharding_file_key, local_file,maxthread=2)
         print(resp.error)
         assert resp.status_code == 200
         # upload big file to private bucket
         logger.info('start sharding upload big file to private bucket')
-        ret, resp = self.multipartuploadufile_handler.uploadfile(private_bucket, sharding_file_key, local_file)
+        ret, resp = self.multipartuploadufile_handler.uploadfile(private_bucket, sharding_file_key, local_file,maxthread=2)
         print(resp.error)
         assert resp.status_code == 200
 
@@ -47,13 +47,13 @@ class MultipartUploadUFileTestCase(unittest.TestCase):
 
         # upload binary data stream to public bucket
         logger.info('start upload stream to public bucket')
-        ret, resp = self.multipartuploadufile_handler.uploadstream(public_bucket, sharding_stream_key, bio)
+        ret, resp = self.multipartuploadufile_handler.uploadstream(public_bucket, sharding_stream_key, bio,maxthread=2)
         print(resp.error)
         assert resp.status_code == 200
         # upload binary data stream to private bucket
         logger.info('start upload stream to private bucket')
         bio.seek(0, os.SEEK_SET)
-        ret, resp = self.multipartuploadufile_handler.uploadstream(private_bucket, sharding_stream_key, bio)
+        ret, resp = self.multipartuploadufile_handler.uploadstream(private_bucket, sharding_stream_key, bio,maxthread=2)
         print(resp.error)
         assert resp.status_code == 200
 

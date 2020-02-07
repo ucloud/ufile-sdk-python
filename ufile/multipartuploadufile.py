@@ -100,12 +100,13 @@ class MultipartUploadUFile(BaseUFile):
         sem=threading.Semaphore(maxthread)  
         for data in _file_iter(self.__stream, self.blocksize):
             self.etaglist.append("")
-            thread1 = threading.Thread(target=self.__partthread, args=(sem, self.__bucket, self.__key, self.uploadid, self.pausepartnumber, self.__header, data, retrycount, self.etaglist, ))
+            thread1 = threading.Thread(target=self.__partthread, args=(sem, self.__bucket, self.__key, self.uploadid, self.pausepartnumber, self.__header, data, retrycount, retryinterval, self.etaglist))
             thread1.start()
+            thread1.join()
             self.pausepartnumber += 1
                             
         while threading.active_count()>1:
-            time.sleep(0.05)
+            time.sleep(5)
                 
         logger.info('start finish sharding request.')
         ret, resp = self.__finishupload()
@@ -316,7 +317,7 @@ class MultipartUploadUFile(BaseUFile):
             logger.info('mulitpart upload succeed. uploadid: {0}, key: {1} SUCCEED!!!'.format(self.uploadid, self.__key))
         return ret, resp
 
-    def __partthread(self, sem, bucket, key, uploadid, part_number, header, data, retrycount, etaglist):
+    def __partthread(self, sem, bucket, key, uploadid, part_number, header, data, retrycount, retryinterval, etaglist):
         with sem:
             url = shardingupload_url(bucket, key, uploadid, part_number)
             ret = None
@@ -326,7 +327,7 @@ class MultipartUploadUFile(BaseUFile):
                 logger.info('sharding url:{0}'.format(url))
                 ret, resp = _shardingupload(url, data, header)
                 if not resp.ok():
-                    logger.error('failed {0} time when upload sharding {1}.error message: {2}, uploadid: {3}'.format(index + 1, part_number, resp.error, upload_id))
+                    logger.error('failed {0} time when upload sharding {1}.error message: {2}, uploadid: {3}'.format(index + 1, part_number, resp.error, uploadid))
                     if index < retrycount - 1:
                         time.sleep(retryinterval)
                 else:

@@ -534,10 +534,3 @@ class FileManager(BaseUFile):
 
         return _rename_file(url, header, params)
 
-    def putfile_thread(self, sem, bucket, key, local_file, header=None):
-        with sem:
-            ret, resp = self.putfile(bucket, key, local_file, header)
-            if resp.status_code != 200:
-                logger.error('put file {0} failed. err: {1}'.format(key, resp))
-                exit("put file failed!")
-            logger.info('put file {0} succeed.'.format(key))

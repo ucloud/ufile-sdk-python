@@ -6,8 +6,8 @@ import time
 import hashlib
 import json   
 from .baseufile import BaseUFile
-from .httprequest import _put_stream, _put_file, _post_file, ResponseInfo, _uploadhit_file, _download_file, _delete_file, _getfilelist,_head_file, _restore_file, _classswitch_file, _copy_file, _rename_file
-from .util import _check_dict, ufile_put_url, ufile_post_url, file_etag, ufile_uploadhit_url, ufile_getfilelist_url, mimetype_from_file, ufile_restore_url, ufile_classswitch_url, ufile_copy_url, ufile_rename_url
+from .httprequest import _put_stream, _put_file, _post_file, ResponseInfo, _uploadhit_file, _download_file, _delete_file, _getfilelist,_head_file, _restore_file, _classswitch_file, _copy_file, _rename_file, _listobjects
+from .util import _check_dict, ufile_put_url, ufile_post_url, file_etag, ufile_uploadhit_url, ufile_getfilelist_url, mimetype_from_file, ufile_restore_url, ufile_classswitch_url, ufile_copy_url, ufile_rename_url, ufile_listobjects_url
 from .logger import logger
 from .compact import b, s, u, url_parse
 from . import config
@@ -533,4 +533,43 @@ class FileManager(BaseUFile):
         url = ufile_rename_url(bucket, key)
 
         return _rename_file(url, header, params)
+
+    def listobjects(self, bucket, prefix=None, marker=None, maxkeys=None, delimiter=None, header=None):
+        """
+        获取bucket下的文件列表
+
+        :param bucket: string 类型，空间名称
+        :param prefix: string 类型，返回以prefix作为前缀的目录文件列表
+        :param marker: string 类型，返回以字母排序后，大于marker的目录文件列表
+        :param maxkeys: integer 类型，指定返回目录文件列表的最大数量，默认值为100
+        :param delimiter: stringr 类型，目录分隔符，当前只支持"/"和""，当delimiter设置为"/"时，返回目录形式的文件列表，当delimiter设置为""时，返回非目录层级文件列表
+        :param header: dict类型，http 请求header，键值对类型分别为string，比如{'User-Agent': 'Google Chrome'}
+        :return: ret: 如果http状态码为[200, 204, 206]之一则返回None，否则如果服务器返回json信息则返回dict类型，键值对类型分别为string, unicode string类型，否则返回空的dict
+        :return:  ResponseInfo: 响应的具体信息，UCloud UFile 服务器返回信息或者网络链接异常
+        """
+        if header is None:
+            header = dict()
+        else:
+            _check_dict(header)
+        if maxkeys is None:
+            maxkeys = 100
+        if 'User-Agent' not in header:
+            header['User-Agent'] = config.get_default('user_agent')
+
+        header['Content-Length'] = str(0)
+        authorization = self.authorization('get', bucket, '', header)
+        header['Authorization'] = authorization
+        param = dict()
+        if marker is not None and (isinstance(marker, str) or isinstance(marker, unicode)):
+            param['marker'] = s(marker)
+        if prefix is not None and (isinstance(prefix, str) or isinstance(prefix, unicode)):
+            param['prefix'] = s(prefix)
+        if maxkeys is not None and isinstance(maxkeys, int):
+            param['max-keys'] = s(str(maxkeys))
+        if delimiter is not None and (isinstance(delimiter, str) or isinstance(delimiter, unicode)):
+            param['delimiter'] = s(delimiter)
+        info_message = ''.join(['start list objects from bucket {0}'.format(bucket), '' if marker is None else ', marker: {0}'.format(marker if isinstance(marker, str) else marker.encode('utf-8')), '' if maxkeys is None else ', maxkeys: {0}'.format(maxkeys), '' if prefix is None else ', prefix: {0}'.format(prefix), '' if delimiter is None else ', delimiter: {0}'.format(delimiter)])
+        logger.info(info_message)
+        url = ufile_listobjects_url(bucket)
+        return _listobjects(url, header, param)
 

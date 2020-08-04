@@ -205,6 +205,23 @@ def _getfilelist(url, header, param):
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
 
+def _listobjects(url, header, param):
+    """
+    获取目录文件列表
+
+    :param url: string 类型，获取目录文件列表的url
+    :param header: dict类型，http 请求header，键值对类型分别为string，比如{'User-Agent': 'Google Chrome'}
+    :return: ret: 如果http状态码不为[200, 204, 206]之一则返回None，否则如果服务器返回json信息则返回dict类型，键值对类型分别为string, unicode string类型，否则返回空的dict
+    :return:  ResponseInfo: 响应的具体信息，UCloud UFile 服务器返回信息或者网络链接异常
+    """
+
+    try:
+        response = requests.get(url, headers=header, params=param, timeout=config.get_default('connection_timeout'))
+    except requests.RequestException as e:
+        logger.error('send request error:{0}'.format(e))
+        return None, ResponseInfo(None, e)
+    return __return_wraper(response)
+
 def _restore_file(url, header):
     """
     解冻冷存文件请求

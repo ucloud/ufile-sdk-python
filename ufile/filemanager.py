@@ -557,8 +557,6 @@ class FileManager(BaseUFile):
             header['User-Agent'] = config.get_default('user_agent')
 
         header['Content-Length'] = str(0)
-        authorization = self.authorization('get', bucket, '', header)
-        header['Authorization'] = authorization
         param = dict()
         if marker is not None and (isinstance(marker, str) or isinstance(marker, unicode)):
             param['marker'] = s(marker)
@@ -568,6 +566,10 @@ class FileManager(BaseUFile):
             param['max-keys'] = s(str(maxkeys))
         if delimiter is not None and (isinstance(delimiter, str) or isinstance(delimiter, unicode)):
             param['delimiter'] = s(delimiter)
+
+        authorization = self.authorization('get', bucket, '', header, '', 'listobjects', param)
+        header['Authorization'] = authorization
+
         info_message = ''.join(['start list objects from bucket {0}'.format(bucket), '' if marker is None else ', marker: {0}'.format(marker if isinstance(marker, str) else marker.encode('utf-8')), '' if maxkeys is None else ', maxkeys: {0}'.format(maxkeys), '' if prefix is None else ', prefix: {0}'.format(prefix), '' if delimiter is None else ', delimiter: {0}'.format(delimiter)])
         logger.info(info_message)
         url = ufile_listobjects_url(bucket)

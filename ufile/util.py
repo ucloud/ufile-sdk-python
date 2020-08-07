@@ -259,3 +259,13 @@ def ufile_rename_url(bucket, key):
     :return: string类型, 重命名文件的url
     """
     return 'http://{0}{1}/{2}'.format(bucket, config.get_default('upload_suffix'), key)
+
+def ufile_listobjects_url(bucket):
+    """
+    获取目录文件列表的url
+
+    :param bucket: string 类型，获取的空间名称
+    :return: string类型，获取目录文件列表的url
+    """
+    return 'http://{0}{1}/?listobjects'.format(bucket, config.get_default('upload_suffix'))
+

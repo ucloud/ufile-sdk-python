@@ -387,6 +387,24 @@ ret, resp = getfilelist_hander.getfilelist(bucket, prefix=prefix, limit=limit, m
 assert resp.status_code == 200
 ~~~~~~~~~~~~~~~
 
+### 获取目录文件列表
+
+~~~~~~~~~~~~~~~{.py}
+bucket = ''		#空间名称
+
+from ufile import filemanager
+
+listobjects_hander = filemanager.FileManager(public_key, private_key)
+
+prefix=''     #以prefix作为前缀的目录文件列表
+maxkeys=100   #指定返回目录文件列表的最大数量
+marker=''     #返回以字母排序后，大于marker的目录文件列表
+delimiter='/' #delimiter是目录分隔符，当前只支持"/"和" "，当Delimiter设置为"/"时，返回目录形式的文件列表，当delimiter设置为" "时，返回非目录层级文件列表
+
+ret, resp = listobjects_hander.listobjects(bucket, prefix=prefix, maxkeys=maxkeys, marker=marker, delimiter=delimiter)
+assert resp.status_code == 200
+~~~~~~~~~~~~~~~
+
 ### 支持拷贝
 
 * demo 程序

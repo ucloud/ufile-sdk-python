@@ -9,21 +9,35 @@
 
 ## 文件目录说明
 
-* docs文件夹：                开发文档生成文件
-* ufile文件夹：               SDK的具体实现
-* setup.py:                   package安装文件
-* test_ufile文件夹:           测试文件以及demo示例
+* docs文件夹:                 开发文档生成文件
+* ufile文件夹:                SDK的具体实现
+* setup.py:                  package安装文件
+* test_ufile文件夹:           测试文件
+* examples:                  示例代码
 
-## 使用方法
+## 安装
 
-> `python setup.py install` (本地安装)
-> 
-> `pip install ufile` (pip安装，须首先安装pip)
- 
+### 本地安装
+
+```bash
+$ git clone https://github.com/ucloud/ufile-sdk-python.git
+$ git checkout <tag/branch>
+$ cd ufile-sdk-python
+$ python setup.py install
+```
+
+### 使用 pip 安装
+
+```bash
+$ pip install ufile
+# 如果你要使用 pre-release 版本
+$ pip install --pre ufile
+```
+
 **注意：在国内的 pip 源会由于网络问题无法更新，建议加上国内的 python 源。**
 具体请见：[如何添加 python 国内源？](https://www.baidu.com/s?wd=python%20%E5%9B%BD%E5%86%85%E6%BA%90&rsv_spt=1&rsv_iqid=0xd4c874b700022c35&issp=1&f=8&rsv_bp=1&rsv_idx=2&ie=utf-8&rqlang=cn&tn=baiduhome_pg&rsv_enter=0&rsv_t=ca7cGiKHZYyi4WMSjK1f%2BXazzuAjqbqCTbXjSrEq6oiaXwF3im1hQl9E9xE9fKWkDccY&oq=python%2520%25E5%259B%25BD%25E5%2586%2585%25E6%25BA%2590&rsv_pq=ba65a2f20001ea73)
 
-## 开发文档生成 
+## 开发文档生成
 
 docs文件夹包含基于sphinx的开发文档生成文件，在此文件夹下可通过运行make html命令可生成build目录，build/html目录即为开发文档
 
@@ -33,14 +47,16 @@ ufile文件夹包含SDK的具体实现，该文件夹亦是名为ufile的package
 
 ### 公共参数说明
 
-~~~~~~~~~~~~~~~{.py}
-public_key = ''			#账户公私钥中的公钥
-private_key = ''		#账户公私钥中的私钥
-~~~~~~~~~~~~~~~
+```python
+public_key = ''         #公钥或token
+private_key = ''        #私钥或token
+```
 
-### 设置参数
+[如何创建一个token？](https://console.ucloud.cn/ufile/token)
 
-~~~~~~~~~~~~~~~{.py}
+### 设置默认参数
+
+```python
 from ufile import config
 
 #设置上传host后缀,外网可用后缀形如 .cn-bj.ufileos.com（cn-bj为北京地区，其他地区具体后缀可见控制台：对象存储-单地域空间管理-存储空间域名）
@@ -53,26 +69,28 @@ config.set_default(connection_timeout=60)
 config.set_default(expires=60)
 #设置上传文件是否校验md5
 config.set_default(md5=True)
-~~~~~~~~~~~~~~~
+```
+
+* 如果在实例化 FileManager 和 MultipartUploadUFile 实例时传入相关参数，则生成的实例会使用传入的值，而不是此处设置的默认值。
 
 ### 设置日志文件
 
-~~~~~~~~~~~~~~~{.py}
+```python
 from ufile import logger
 
 locallogname = '' #完整本地日志文件名
 logger.set_log_file(locallogname)
-~~~~~~~~~~~~~~~
+```
 
 ### 支持普通上传
 
 * demo 程序
 
-~~~~~~~~~~~~~~~{.py}
-public_bucket = ''		#公共空间名称
-private_bucket = ''		#私有空间名称
-localfile = ''			#本地文件名
-put_key = ''			#上传文件在空间中的名称
+```python
+public_bucket = ''      #公共空间名称
+private_bucket = ''     #私有空间名称
+localfile = ''          #本地文件名
+put_key = ''            #上传文件在空间中的名称
 
 from ufile import filemanager
 
@@ -91,7 +109,7 @@ from io import BytesIO
 bio = BytesIO(u'Do be a good man'.encode('utf-8'))  #二进制数据流
 stream_key = ''                         #上传数据流在空间中的名称
 ret, resp = putufile_handler.putstream(public_bucket, stream_key, bio)
-~~~~~~~~~~~~~~~
+```
 
 * HTTP 返回状态码
 
@@ -106,7 +124,7 @@ ret, resp = putufile_handler.putstream(public_bucket, stream_key, bio)
 
 * demo程序
 
-~~~~~~~~~~~~~~~{.py}
+```python
 public_bucket = ''      #公共空间名称
 private_bucket = ''     #私有空间名称
 localfile = ''          #本地文件名
@@ -123,7 +141,7 @@ assert resp.status_code == 200
 # 表单上传至私有空间
 ret, resp = postufile_handler.postfile(private_bucket, post_key, localfile)
 assert resp.status_code == 200
-~~~~~~~~~~~~~~~
+```
 
 * HTTP 返回状态码
 
@@ -138,7 +156,7 @@ assert resp.status_code == 200
 
 * demo程序
 
-~~~~~~~~~~~~~~~{.py}
+```python
 public_bucket = ''      #公共空间名称
 existkey = ''           #添加上传文件在空间中的名称
 nonexistkey = ''        #添加上传文件在空间中的名称
@@ -156,7 +174,7 @@ assert resp.status_code == 200
 # 秒传不存在文件
 ret, resp = uploadhitufile_handler.uploadhit(public_bucket, nonexistkey, nonexistfile)
 assert resp.status_code == 404
-~~~~~~~~~~~~~~~
+```
 
 * HTTP 状态返回码
 
@@ -172,7 +190,7 @@ assert resp.status_code == 404
 
 * demo程序
 
-~~~~~~~~~~~~~~~{.py}
+```python
 public_bucket = ''          #公共空间名称
 private_bucket = ''         #私有空间名称
 public_savefile = ''        #保存文件名
@@ -196,7 +214,7 @@ assert resp.status_code == 200
 # 下载包含文件范围请求的文件
 ret, resp = downloadufile_handler.download_file(public_bucket, put_key, range_savefile, isprivate=False, expires=300, content_range=(0, 15))
 assert resp.status_code == 206
-~~~~~~~~~~~~~~~
+```
 
 * HTTP 返回状态码
 
@@ -214,7 +232,7 @@ assert resp.status_code == 206
 
 * demo程序
 
-~~~~~~~~~~~~~~~{.py}
+```python
 public_bucket = ''              #公共空间名称
 private_bucekt = ''             #私有空间名称
 delete_key = ''                 #文件在空间中的名称
@@ -230,7 +248,7 @@ assert resp.status_code == 204
 # 删除私有空间的文件
 ret, resp = deleteufile_handler.deletefile(private_bucket, delete_key)
 assert resp.status_code == 204
-~~~~~~~~~~~~~~~
+```
 
 * HTTP 返回状态码
 
@@ -244,7 +262,7 @@ assert resp.status_code == 204
 
 * demo程序
 
-~~~~~~~~~~~~~~~{.py}
+```python
 public_bucket = ''      #公共空间名称
 sharding_key = ''       #上传文件在空间中的名称
 localfile = ''          #本地文件名
@@ -276,7 +294,7 @@ elif resp.status_code == -1:    # 网络连接问题，续传
 else:   # 服务器或者客户端错误
     print(resp.error)
     break
-~~~~~~~~~~~~~~~
+```
 
 * HTTP 返回状态码
 
@@ -291,7 +309,7 @@ else:   # 服务器或者客户端错误
 
 * demo 程序
 
-~~~~~~~~~~~~~~~{.py}
+```python
 public_bucket = ''		#公共空间名称
 localfile = ''			#本地文件名
 put_key = ''			#上传文件在空间中的名称
@@ -309,7 +327,7 @@ assert rest.status_code == 200
 # 解冻冷存文件
 ret, resp = restorefile_handler.restore_file(public_bucket, put_key)
 assert resp.status_code == 200
-~~~~~~~~~~~~~~~
+```
 
 * HTTP 返回状态码
 
@@ -324,7 +342,7 @@ assert resp.status_code == 200
 
 * demo 程序
 
-~~~~~~~~~~~~~~~{.py}
+```python
 public_bucket = ''		#公共空间名称
 localfile = ''			#本地文件名
 put_key = ''			#上传文件在空间中的名称
@@ -343,7 +361,7 @@ assert rest.status_code == 200
 # 标准文件类型转换为低频文件类型
 ret, resp = classswitch_handler.class_switch_file(public_bucket, put_key, IA)
 assert resp.status_code == 200
-~~~~~~~~~~~~~~~
+```
 
 * HTTP 返回状态码
 
@@ -356,7 +374,7 @@ assert resp.status_code == 200
 
 ### 比较本地文件和远程文件etag
 
-~~~~~~~~~~~~~~~{.py}
+```python
 from ufile import filemanager
 
 public_bucket = ''    #添加公共空间名称
@@ -369,11 +387,11 @@ if result==True:
     logger.info('\netag are the same!')
 else:
     logger.info('\netag are different!')
-~~~~~~~~~~~~~~~
+```
 
 ### 获取文件列表
 
-~~~~~~~~~~~~~~~{.py}
+```python
 bucket = ''		#空间名称
 
 from ufile import filemanager
@@ -385,11 +403,11 @@ limit=10  #文件列表数目
 marker='' #文件列表起始位置
 ret, resp = getfilelist_hander.getfilelist(bucket, prefix=prefix, limit=limit, marker=marker)
 assert resp.status_code == 200
-~~~~~~~~~~~~~~~
+```
 
 ### 获取目录文件列表
 
-~~~~~~~~~~~~~~~{.py}
+```python
 bucket = ''		#空间名称
 
 from ufile import filemanager
@@ -403,13 +421,13 @@ delimiter='/' #delimiter是目录分隔符，当前只支持"/"和" "，当Delim
 
 ret, resp = listobjects_hander.listobjects(bucket, prefix=prefix, maxkeys=maxkeys, marker=marker, delimiter=delimiter)
 assert resp.status_code == 200
-~~~~~~~~~~~~~~~
+```
 
 ### 支持拷贝
 
 * demo 程序
 
-~~~~~~~~~~~~~~~{.py}
+```python
 public_bucket = ''		#公共空间名称
 key = ''			#目的文件在空间中的名称
 srcbucket = ''			#源文件所在空间名称
@@ -422,7 +440,7 @@ copyufile_handler = filemanager.FileManager(public_key, private_key)
 # 拷贝文件
 ret, resp = copyufile_handler.copy(public_bucket, key, srcbucket, srckey)
 assert resp.status_code == 200
-~~~~~~~~~~~~~~~
+```
 
 * HTTP 返回状态码
 
@@ -437,7 +455,7 @@ assert resp.status_code == 200
 
 * demo 程序
 
-~~~~~~~~~~~~~~~{.py}
+```python
 public_bucket = ''		#公共空间名称
 key = ''			#源文件在空间中的名称
 newkey = ''			#目的文件在空间中的名称
@@ -449,7 +467,7 @@ renameufile_handler = filemanager.FileManager(public_key, private_key)
 # 拷贝文件
 ret, resp = renameufile_handler.rename(public_bucket, key, newkey, 'true')
 assert resp.status_code == 200
-~~~~~~~~~~~~~~~
+```
 
 * HTTP 返回状态码
 
@@ -463,7 +481,7 @@ assert resp.status_code == 200
 
 ### 空间管理
 
-~~~~~~~~~~~~~~~{.py}
+```python
 from ufile import bucketmanager
 
 bucketmanager_handler = bucketmanager.BucketManager(public_key, private_key)
@@ -486,4 +504,4 @@ print(ret)
 # 更改bucket属性
 bucketname = '' # 待更改的私有空间名称
 bucketmanager_handler.updatebucket(bucketname, 'public'):
-~~~~~~~~~~~~~~~
+```

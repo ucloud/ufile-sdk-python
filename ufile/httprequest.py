@@ -113,7 +113,7 @@ def _head_file(url,header):
     """
     try:
         response=requests.head(url, headers=header, timeout=config.get_default('connection_timeout'))
-    except:
+    except requests.RequestException as e:
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
 

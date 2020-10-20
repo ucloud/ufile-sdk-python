@@ -19,6 +19,7 @@ _config = {
     'upload_suffix': UCLOUD_PROXY_SUFFIX,
     'download_suffix': UCLOUD_DOWNLOAD_SUFFIX,
     'user_agent': USER_AGENT,
+    # 调用上传接口时，是否计算 md5
     'md5': False,
 }
 

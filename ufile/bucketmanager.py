@@ -120,7 +120,7 @@ class BucketManager(object):
         更新空间的属性
 
         :param bucket: string类型，空间名称
-        :param buckettype: string类型， 'private' 或者 'string'
+        :param buckettype: string类型， 'private' 或者 'public'
         :param projectid:  string类型，项目ID
         :param header: dict类型，http 请求header，键值对类型分别为string，比如{'User-Agent': 'Google Chrome'}
         :return: ret: 如果http状态码为[200, 204, 206]之一则返回None，否则如果服务器返回json信息则返回dict类型，键值对类型分别为string, unicode string类型，否则返回空的dict

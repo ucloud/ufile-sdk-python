@@ -7,16 +7,17 @@ from ufile.compact import b
 from ufile.logger import logger, set_log_file
 from ufile.config import BLOCKSIZE, get_default
 from ufile.compact import BytesIO
+from common import *
 
 set_log_file()
-public_key = '<your public key>'             #添加自己的账户公钥
-private_key = '<your private key>'           #添加自己的账户私钥
-public_bucket = '<your public bucket name>'  #添加公共空间名称
+public_key = PUBLIC_KEY             #添加自己的账户公钥
+private_key = PRIVATE_KEY           #添加自己的账户私钥
+public_bucket = PUBLIC_BUCKET  #添加公共空间名称
 existfile = '<your local file>'              #添加本地文件(空间已存在)
 nonexistfile = '<your local file>'           #添加本地文件(空间不存在)
 
-existkey = 'instead'  
-nonexistkey = 'instead_non'  
+existkey = 'instead'
+nonexistkey = 'instead_non'
 
 
 class UploadHitUFileTestCase(unittest.TestCase):

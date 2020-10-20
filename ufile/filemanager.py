@@ -4,7 +4,7 @@
 import os
 import time
 import hashlib
-import json   
+import json
 from .baseufile import BaseUFile
 from .httprequest import _put_stream, _put_file, _post_file, ResponseInfo, _uploadhit_file, _download_file, _delete_file, _getfilelist,_head_file, _restore_file, _classswitch_file, _copy_file, _rename_file, _listobjects
 from .util import _check_dict, ufile_put_url, ufile_post_url, file_etag, ufile_uploadhit_url, ufile_getfilelist_url, mimetype_from_file, ufile_restore_url, ufile_classswitch_url, ufile_copy_url, ufile_rename_url, ufile_listobjects_url
@@ -19,15 +19,22 @@ class FileManager(BaseUFile):
     """
     UCloud UFile普通上传文件类
     """
-    def __init__(self, public_key, private_key):
+    def __init__(self, public_key, private_key, upload_suffix=None, download_suffix=None):
         """
         初始化 PutUFile 实例
 
         :param public_key: string类型, 账户API公私钥中的公钥
         :param private_key: string类型, 账户API公私钥中的私钥
+        :param upload_suffix: string类型, 如果传入此参数, 则会忽略 config 中配置的 upload_suffix 字段
+        :param download_suffix: string类型, 如果传入此参数, 则会忽略 config 中配置的 download_suffix 字段
         :return: None，如果为非法的公私钥，则抛出ValueError异常
         """
         super(FileManager, self).__init__(public_key, private_key)
+        self.__upload_suffix = upload_suffix
+        self.__download_suffix = download_suffix
+
+    def _get_download_domain(self, bucket):
+        return 'http://{0}{1}'.format(bucket, self.__download_suffix or config.get_default('download_suffix'))
 
     def putstream(self, bucket, key, stream, mime_type=None, header=None):
         """
@@ -58,7 +65,7 @@ class FileManager(BaseUFile):
             stream.seek(0, os.SEEK_SET)
         authorization = self.authorization('put', bucket, key, header)
         header['Authorization'] = authorization
-        url = ufile_put_url(bucket, key)
+        url = ufile_put_url(bucket, key, upload_suffix=self.__upload_suffix)
         logger.info('start put stream to bucket {0} as {1}'.format(bucket, key))
         logger.info('put UFile url: {0}'.format(url))
         logger.info('request header:\n{0}'.format(json.dumps(header, indent=4)))
@@ -94,7 +101,7 @@ class FileManager(BaseUFile):
         header['Authorization'] = authorization
         if file_size!=0:
             header['Content-Length'] = str(file_size)
-        url = ufile_put_url(bucket, key)
+        url = ufile_put_url(bucket, key, upload_suffix=self.__upload_suffix)
         logger.info('start put file {0} to bucket {1} as {2}'.format(localfile, bucket, key))
         logger.info('put UFile url: {0}'.format(url))
         logger.info('request header:\n{0}'.format(json.dumps(header, indent=4)))
@@ -134,7 +141,7 @@ class FileManager(BaseUFile):
         header['Content-Length'] = str(len(postdata))
 
         # post url
-        url = ufile_post_url(bucket)
+        url = ufile_post_url(bucket, upload_suffix=self.__upload_suffix)
 
         # start post file
         logger.info('start post file {0} to bucket {1} as {2}'.format(localfile, bucket, key))
@@ -212,19 +219,18 @@ class FileManager(BaseUFile):
         header['Authorization'] = authorization
 
         # parameter
-
         params = {'Hash': fileetags,
                   'FileName': key,
                   'FileSize': filesize}
 
-        url = ufile_uploadhit_url(bucket)
+        url = ufile_uploadhit_url(bucket, upload_suffix=self.__upload_suffix)
 
         logger.info('start upload hit localfile {0} as {1} in bucket {2}'.format(localfile, key, bucket))
         logger.info('request url: {0}'.format(url))
 
         return _uploadhit_file(url, header, params)
 
-    def download_file(self, bucket, key, localfile, isprivate=True, expires=config.get_default('expires'), content_range=None, header=None):
+    def download_file(self, bucket, key, localfile, isprivate=True, expires=None, content_range=None, header=None):
         """
         下载UFile文件并且保存为本地文件
 
@@ -242,6 +248,10 @@ class FileManager(BaseUFile):
             header = dict()
         else:
             _check_dict(header)
+
+        if expires is None:
+            expires = config.get_default('expires')
+
         if 'User-Agent' not in header:
             header['User-Agent'] = config.get_default('user_agent')
 
@@ -265,9 +275,9 @@ class FileManager(BaseUFile):
         :param key: string类型，下载数据在空间中的名称
         :return: string类型，下载数据的url
         """
-        return 'http://{0}{1}/{2}'.format(bucket, config.get_default('download_suffix'), key)
+        return self._get_download_domain(bucket) + '/' + key
 
-    def private_download_url(self, bucket, key, expires=config.get_default('expires'), header=None, internal=False):
+    def private_download_url(self, bucket, key, expires=None, header=None, internal=False):
         """
         从私有空间下载文件的url
 
@@ -283,20 +293,24 @@ class FileManager(BaseUFile):
             _check_dict(header)
         if 'User-Agent' not in header:
             header['User-Agent'] = config.get_default('user_agent')
-        if expires is not None:
-            expires += int(time.time())
-            header['Expires'] = s(str(expires))
+
+        if expires is None:
+            expires = config.get_default('expires')
+        expires += int(time.time())
+        header['Expires'] = s(str(expires))
+
         signature = self.signature(bucket, key, 'get', header)
         query = { 'UCloudPublicKey': self._public_key(),
                   'Expires': str(expires),
                   'Signature': signature }
         query_str = url_parse(query)
-        if internal:
-            return 'http://{0}{1}/{2}?{3}'.format(bucket, config.get_default('download_suffix'), key, query_str)
-        else:
-            return 'http://{0}{1}/{2}?UCloudPublicKey={3}&Expires={4}&Signature={5}'.format(bucket, config.get_default('download_suffix'), key, self._public_key(), str(expires), signature)
 
-    def private_head_url(self, bucket, key, expires=config.get_default('expires'), header=None):
+        url = self._get_download_domain(bucket) + '/' + key
+        if internal:
+            return url + '?' + query_str
+        return url + '?UCloudPublicKey={0}&Expires={1}&Signature={2}'.format(self._public_key(), str(expires), signature)
+
+    def private_head_url(self, bucket, key, expires=None, header=None):
         """
         从私有空间下载文件的url
 
@@ -313,11 +327,13 @@ class FileManager(BaseUFile):
         if 'User-Agent' not in header:
             header['User-Agent'] = config.get_default('user_agent')
 
-        if expires is not None:
-            expires += int(time.time())
-            header['Expires'] = s(str(expires))
+        if expires is None:
+            expires = config.get_default('expires')
+        expires += int(time.time())
+        header['Expires'] = s(str(expires))
+
         signature = self.signature(bucket, key, 'head', header)
-        return 'http://{0}{1}/{2}?UCloudPublicKey={3}&Expires={4}&Signature={5}'.format(bucket, config.get_default('download_suffix'), key, self._public_key(), str(expires), signature)
+        return self._get_download_domain(bucket) + '/' + key + '?UCloudPublicKey={0}&Expires={1}&Signature={2}'.format(self._public_key(), str(expires), signature)
 
     def deletefile(self, bucket, key, header=None):
         """
@@ -340,7 +356,7 @@ class FileManager(BaseUFile):
         header['Authorization'] = authorization
 
         logger.info('start delete file {0} in bucket {1}'.format(key, bucket))
-        url = ufile_put_url(bucket, key)
+        url = ufile_put_url(bucket, key, upload_suffix=self.__upload_suffix)
 
         return _delete_file(url, header)
 
@@ -367,18 +383,18 @@ class FileManager(BaseUFile):
         authorization = self.authorization('get', bucket, '', header)
         header['Authorization'] = authorization
         param = dict()
-        if marker is not None and (isinstance(marker, str) or isinstance(marker, unicode)):
+        if marker is not None and isinstance(marker, str):
             param['marker'] = s(marker)
-        if prefix is not None and (isinstance(prefix, str) or isinstance(prefix, unicode)):
+        if prefix is not None and isinstance(prefix, str):
             param['prefix'] = s(prefix)
         if limit is not None and isinstance(limit, int):
             param['limit'] = s(str(limit))
         info_message = ''.join(['start get file list from bucket {0}'.format(bucket), '' if marker is None else ', marker: {0}'.format(marker if isinstance(marker, str) else marker.encode('utf-8')), '' if limit is None else ', limit: {0}'.format(limit), '' if prefix is None else ', prefix: {0}'.format(prefix)])
         logger.info(info_message)
-        url = ufile_getfilelist_url(bucket)
+        url = ufile_getfilelist_url(bucket, upload_suffix=self.__upload_suffix)
         return _getfilelist(url, header, param)
 
-    def head_file(self,bucket,key,header=None):
+    def head_file(self, bucket, key, header=None):
         """
         获取空间中文件信息方法
 
@@ -399,11 +415,11 @@ class FileManager(BaseUFile):
         header['Authorization'] = authorization
 
         logger.info('start head file {0} in bucket {1}'.format(key, bucket))
-        url = ufile_put_url(bucket, key)
+        url = ufile_put_url(bucket, key, upload_suffix=self.__upload_suffix)
 
         return _head_file(url, header)
 
-    def compare_file_etag(self,bucket,remotekey,localfile):
+    def compare_file_etag(self, bucket, remotekey, localfile):
         """
         比对空间文件和本地文件方法
 
@@ -412,12 +428,12 @@ class FileManager(BaseUFile):
         :param localfile: string类型，本地文件的路径
         :return:True为比对一致，False为不一致
         """
-        ret,resp=self.head_file(bucket,remotekey)
+        ret,resp=self.head_file(bucket, remotekey)
         remote_etag=resp.etag.strip('\"')
-        local_etag=file_etag(localfile,BLOCKSIZE)
+        local_etag=file_etag(localfile, BLOCKSIZE)
         return (remote_etag==local_etag)
 
-    def restore_file(self,bucket,key,header=None):
+    def restore_file(self, bucket, key, header=None):
         """
         解冻冷存文件方法
 
@@ -438,17 +454,18 @@ class FileManager(BaseUFile):
         header['Authorization'] = authorization
 
         logger.info('start restore file {0} in bucket {1}'.format(key, bucket))
-        url = ufile_restore_url(bucket, key)
+        url = ufile_restore_url(bucket, key, upload_suffix=self.__upload_suffix)
 
         return _restore_file(url, header)
 
-    def class_switch_file(self,bucket,key,storageclass,header=None):
+    def class_switch_file(self, bucket, key, storageclass, header=None):
         """
         文件存储类型转换方法
 
         :param bucket: string类型, 空间名称
         :param key:  string类型, 文件在空间中的名称
-        :param storageclass:  string类型, 文件目标存储类型
+        :param storageclass:  string类型
+        尝试拷贝文件到UFile空间, 文件目标存储类型
         :param header: dict类型，http 请求header，键值对类型分别为string，比如{'User-Agent': 'Google Chrome'}
         :return: ret: 如果http状态码为[200, 204, 206]之一则返回None，否则如果服务器返回json信息则返回dict类型，键值对类型分别为string, unicode string类型，否则返回空的dict
         :return:  ResponseInfo: 响应的具体信息，UCloud UFile 服务器返回信息或者网络链接异常
@@ -467,7 +484,7 @@ class FileManager(BaseUFile):
         params = {'storageClass': storageclass}
 
         logger.info('start switch file {0} storage class in bucket {1}'.format(key, bucket))
-        url = ufile_classswitch_url(bucket, key)
+        url = ufile_classswitch_url(bucket, key, upload_suffix=self.__upload_suffix)
 
         return _classswitch_file(url, header, params)
 
@@ -496,7 +513,7 @@ class FileManager(BaseUFile):
         authorization = self.authorization('put', bucket, key, header)
         header['Authorization'] = authorization
 
-        url = ufile_copy_url(bucket, key)
+        url = ufile_copy_url(bucket, key, upload_suffix=self.__upload_suffix)
 
         logger.info('start copy {0} in {1} to {2} in {3}'.format(srckey, srcbucket, key, bucket))
         logger.info('request url: {0}'.format(url))
@@ -530,7 +547,7 @@ class FileManager(BaseUFile):
                   'force': force}
 
         logger.info('start rename {0} in bucket {1}'.format(key, bucket))
-        url = ufile_rename_url(bucket, key)
+        url = ufile_rename_url(bucket, key, upload_suffix=self.__upload_suffix)
 
         return _rename_file(url, header, params)
 
@@ -558,13 +575,13 @@ class FileManager(BaseUFile):
 
         header['Content-Length'] = str(0)
         param = dict()
-        if marker is not None and (isinstance(marker, str) or isinstance(marker, unicode)):
+        if marker is not None and isinstance(marker, str):
             param['marker'] = s(marker)
-        if prefix is not None and (isinstance(prefix, str) or isinstance(prefix, unicode)):
+        if prefix is not None and isinstance(prefix, str):
             param['prefix'] = s(prefix)
         if maxkeys is not None and isinstance(maxkeys, int):
             param['max-keys'] = s(str(maxkeys))
-        if delimiter is not None and (isinstance(delimiter, str) or isinstance(delimiter, unicode)):
+        if delimiter is not None and isinstance(delimiter, str):
             param['delimiter'] = s(delimiter)
 
         authorization = self.authorization('get', bucket, '', header, '', 'listobjects', param)
@@ -572,6 +589,6 @@ class FileManager(BaseUFile):
 
         info_message = ''.join(['start list objects from bucket {0}'.format(bucket), '' if marker is None else ', marker: {0}'.format(marker if isinstance(marker, str) else marker.encode('utf-8')), '' if maxkeys is None else ', maxkeys: {0}'.format(maxkeys), '' if prefix is None else ', prefix: {0}'.format(prefix), '' if delimiter is None else ', delimiter: {0}'.format(delimiter)])
         logger.info(info_message)
-        url = ufile_listobjects_url(bucket)
+        url = ufile_listobjects_url(bucket, upload_suffix=self.__upload_suffix)
         return _listobjects(url, header, param)
 

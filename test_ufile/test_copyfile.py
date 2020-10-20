@@ -4,11 +4,12 @@ import unittest
 from ufile import filemanager
 from ufile.logger import logger, set_log_file
 from ufile.config import BLOCKSIZE, get_default
+from common import *
 
 set_log_file()
-public_key = '<your public key>'             #添加自己的账户公钥
-private_key = '<your private key>'           #添加自己的账户私钥
-public_bucket = '<your public bucket name>'  #添加公共空间名称
+public_key = PUBLIC_KEY             #添加自己的账户公钥
+private_key = PRIVATE_KEY           #添加自己的账户私钥
+public_bucket = PUBLIC_BUCKET  #添加公共空间名称
 key = '<your new key>'                       #目标文件名称
 srcbucket = '<source bucket>'                #源文件所在空间
 srckey = '<source key>'                      #源文件名称

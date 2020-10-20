@@ -10,20 +10,20 @@ from ufile.compact import BytesIO
 from common import *
 
 set_log_file()
-public_key = '<your public key>'                   #添加自己的账户公钥
-private_key = '<your private key>'                 #添加自己的账户私钥
-public_bucket = '<your public bucket name>'        #添加公共空间名称
-private_bucket = '<your private bucket name>'      #添加私有空间名称
+public_key = PUBLIC_KEY                   #添加自己的账户公钥
+private_key = PRIVATE_KEY                 #添加自己的账户私钥
+public_bucket = PUBLIC_BUCKET        #添加公共空间名称
+private_bucket = PRIVATE_BUCKET      #添加私有空间名称
 
 #自动生成随机txt文档,文件设置较大时随机数生成效率较低，也可自定义本地大文档测试
 local_file =  './sharding.txt'
 content = random_bytes(5*1024*1024)                #此处设置文件大小
 with open(local_file, 'wb') as fileobj:
     fileobj.write(content)
-sharding_file_key = 'sharding'                     
+sharding_file_key = 'sharding'
 
 bio = BytesIO(u'Do be a good man'.encode('utf-8')) #待上传的stream
-sharding_stream_key = 'sharding_stream'            
+sharding_stream_key = 'sharding_stream'
 
 class MultipartUploadUFileTestCase(unittest.TestCase):
     multipartuploadufile_handler = multipartuploadufile.MultipartUploadUFile(public_key, private_key)

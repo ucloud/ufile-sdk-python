@@ -4,11 +4,12 @@ import unittest
 from ufile import filemanager
 from ufile.logger import logger, set_log_file
 from ufile.config import BLOCKSIZE, get_default
+from common import *
 
 set_log_file()
-public_key = '<your public key>'             #添加自己的账户公钥
-private_key = '<your private key>'           #添加自己的账户私钥
-public_bucket = '<your public bucket name>'  #添加公共空间名称
+public_key = PUBLIC_KEY             #添加自己的账户公钥
+private_key = PRIVATE_KEY           #添加自己的账户私钥
+public_bucket = PUBLIC_BUCKET  #添加公共空间名称
 newkey = '<your new key>'                    #目标文件名称
 key = '<your source key>'                    #源文件名称
 force = 'true'                               #当force为true时，表示当newkey已经在空间中存在，可以强覆盖

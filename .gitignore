@@ -9,3 +9,4 @@ requests
 test_ufile/*.log
 test_ufile/*.txt
 docs/build/
+__pycache__/

@@ -121,7 +121,7 @@ def _check_dict(data):
     raise ValueError('The input is not a dict-like object')
 
 
-def ufile_put_url(bucket, key):
+def ufile_put_url(bucket, key, upload_suffix=None):
     """
     采用普通上传方法上传UCloud UFile文件的url
 
@@ -129,30 +129,30 @@ def ufile_put_url(bucket, key):
     :param key:  string类型, 在空间中的文件名
     :return: string类型, 普通上传UFile的url
     """
-    return 'http://{0}{1}/{2}'.format(bucket, config.get_default('upload_suffix'), key)
+    return 'http://{0}{1}/{2}'.format(bucket, upload_suffix or config.get_default('upload_suffix'), key)
 
 
-def ufile_post_url(bucket):
+def ufile_post_url(bucket, upload_suffix=None):
     """
     采用表单上传方法上传UCloud UFile文件的url
 
     :param bucket: string类型, 待创建的空间名称
     :return: string类型, 表单上传UFile的url
     """
-    return 'http://{0}{1}/'.format(bucket, config.get_default('upload_suffix'))
+    return 'http://{0}{1}/'.format(bucket, upload_suffix or config.get_default('upload_suffix'))
 
 
-def ufile_uploadhit_url(bucket):
+def ufile_uploadhit_url(bucket, upload_suffix=None):
     """
     秒传UCloud UFile文件的url
 
     :param bucket: string类型, 待创建的空间名称
     :return: string类型, 秒传UFile的url
     """
-    return 'http://{0}{1}/uploadhit'.format(bucket, config.get_default('upload_suffix'))
+    return 'http://{0}{1}/uploadhit'.format(bucket, upload_suffix or config.get_default('upload_suffix'))
 
 
-def initialsharding_url(bucket, key):
+def initialsharding_url(bucket, key, upload_suffix=None):
     """
     初始化分片上传UCloud UFile的url
 
@@ -160,10 +160,10 @@ def initialsharding_url(bucket, key):
     :param key:  string类型, 在空间中的文件名
     :return: string类型, 初始化分片上传UFile的url
     """
-    return 'http://{0}{1}/{2}?uploads'.format(bucket, config.get_default('upload_suffix'), key)
+    return 'http://{0}{1}/{2}?uploads'.format(bucket, upload_suffix or config.get_default('upload_suffix'), key)
 
 
-def finishsharding_url(bucket, key):
+def finishsharding_url(bucket, key, upload_suffix=None):
     """
     结束分片上传UCloud UFile的url
 
@@ -171,10 +171,10 @@ def finishsharding_url(bucket, key):
     :param key:  string类型, 在空间中的文件名
     :return: string类型, 结束分片上传UFile的url
     """
-    return ufile_put_url(bucket, key)
+    return ufile_put_url(bucket, key, upload_suffix=upload_suffix)
 
 
-def shardingupload_url(bucket, key, uploadid, part_number):
+def shardingupload_url(bucket, key, uploadid, part_number, upload_suffix=None):
     """
     分片上传UCloud UFile的url
 
@@ -184,16 +184,16 @@ def shardingupload_url(bucket, key, uploadid, part_number):
     :param part_number: integer类型, 分片上传的编号,从0开始
     :return: string类型, 结束分片上传UFile的url
     """
-    return 'http://{0}{1}/{2}?uploadId={3}&partNumber={4}'.format(bucket, config.get_default('upload_suffix'), key, uploadid, s(str(part_number)))
+    return 'http://{0}{1}/{2}?uploadId={3}&partNumber={4}'.format(bucket, upload_suffix or config.get_default('upload_suffix'), key, uploadid, s(str(part_number)))
 
-def ufile_getfilelist_url(bucket):
+def ufile_getfilelist_url(bucket, upload_suffix=None):
     """
     获取文件列表的url
 
     :param bucket: string 类型，获取的空间名称
     :return: string类型，获取文件列表的url
     """
-    return 'http://{0}{1}/?list'.format(bucket, config.get_default('upload_suffix'))
+    return 'http://{0}{1}/?list'.format(bucket, upload_suffix or config.get_default('upload_suffix'))
 
 def mimetype_from_file(file):
     """
@@ -219,7 +219,7 @@ def mimetype_from_buffer(stream):
     """
     return 'application/octet-stream'
 
-def ufile_restore_url(bucket, key):
+def ufile_restore_url(bucket, key, upload_suffix=None):
     """
     解冻冷存文件的url
 
@@ -227,9 +227,9 @@ def ufile_restore_url(bucket, key):
     :param key:  string类型, 在空间中的文件名
     :return: string类型, 解冻文件的url
     """
-    return 'http://{0}{1}/{2}?restore'.format(bucket, config.get_default('upload_suffix'), key)
+    return 'http://{0}{1}/{2}?restore'.format(bucket, upload_suffix or config.get_default('upload_suffix'), key)
 
-def ufile_classswitch_url(bucket, key):
+def ufile_classswitch_url(bucket, key, upload_suffix=None):
     """
     文件存储类型转换的url
 
@@ -237,9 +237,9 @@ def ufile_classswitch_url(bucket, key):
     :param key:  string类型, 在空间中的文件名
     :return: string类型, 类型转换的url
     """
-    return 'http://{0}{1}/{2}'.format(bucket, config.get_default('upload_suffix'), key)
+    return 'http://{0}{1}/{2}'.format(bucket, upload_suffix or config.get_default('upload_suffix'), key)
 
-def ufile_copy_url(bucket, key):
+def ufile_copy_url(bucket, key, upload_suffix=None):
     """
     拷贝文件的url
 
@@ -247,9 +247,9 @@ def ufile_copy_url(bucket, key):
     :param key:  string类型, 在空间中的目标文件名
     :return: string类型, 拷贝文件的url
     """
-    return 'http://{0}{1}/{2}'.format(bucket, config.get_default('upload_suffix'), key)
+    return 'http://{0}{1}/{2}'.format(bucket, upload_suffix or config.get_default('upload_suffix'), key)
 
-def ufile_rename_url(bucket, key):
+def ufile_rename_url(bucket, key, upload_suffix=None):
     """
     重命名文件的url
 
@@ -258,14 +258,14 @@ def ufile_rename_url(bucket, key):
     :param newkey:  string类型, 在空间中的目标文件名
     :return: string类型, 重命名文件的url
     """
-    return 'http://{0}{1}/{2}'.format(bucket, config.get_default('upload_suffix'), key)
+    return 'http://{0}{1}/{2}'.format(bucket, upload_suffix or config.get_default('upload_suffix'), key)
 
-def ufile_listobjects_url(bucket):
+def ufile_listobjects_url(bucket, upload_suffix=None):
     """
     获取目录文件列表的url
 
     :param bucket: string 类型，获取的空间名称
     :return: string类型，获取目录文件列表的url
     """
-    return 'http://{0}{1}/?listobjects'.format(bucket, config.get_default('upload_suffix'))
+    return 'http://{0}{1}/?listobjects'.format(bucket, upload_suffix or config.get_default('upload_suffix'))
 

@@ -4,21 +4,22 @@ import unittest
 from ufile import filemanager
 from ufile.logger import logger, set_log_file
 from ufile.config import BLOCKSIZE, get_default
+from common import *
+import os
 
-public_key = '<your public key>'                 #添加自己的账户公钥
-private_key = '<your private key>'               #添加自己的账户私钥
-public_bucket = '<your public bucket name>'      #添加公共空间名称
-private_bucket = '<your private bucket name>'    #添加私有空间名称
+public_key = PUBLIC_KEY                 #添加自己的账户公钥
+private_key = PRIVATE_KEY               #添加自己的账户私钥
+public_bucket = PUBLIC_BUCKET      #添加公共空间名称
+private_bucket = PRIVATE_BUCKET    #添加私有空间名称
 
-put_key = 'put_small'                           
-put_range_key = 'put_stream'                     
-public_download = 'public_download'        
-public_range_download = 'public_range_download'  
-private_download = 'private_download'       
-private_range_download = 'private_range_download' 
+put_key = 'put_small'
+put_range_key = 'put_stream'
+public_download = 'public_download'
+public_range_download = 'public_range_download'
+private_download = 'private_download'
+private_range_download = 'private_range_download'
 
 set_log_file()
-
 
 class DownloadUFileTestCase(unittest.TestCase):
     downloadufile_handler = filemanager.FileManager(public_key, private_key)
@@ -45,6 +46,13 @@ class DownloadUFileTestCase(unittest.TestCase):
         logger.info('start download with range condition from private bucket')
         ret, resp = self.downloadufile_handler.download_file(private_bucket, put_range_key, private_range_download, isprivate=True, expires=get_default('expires'), content_range=(0, 15), header=None)
         assert resp.status_code == 206
+
+    @classmethod
+    def tearDownClass(cls):
+        os.remove(public_download)
+        os.remove(public_range_download)
+        os.remove(private_download)
+        os.remove(private_range_download)
 
 if __name__ == '__main__':
     unittest.main()

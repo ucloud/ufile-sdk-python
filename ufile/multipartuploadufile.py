@@ -24,12 +24,13 @@ class MultipartUploadUFile(BaseUFile):
     pausepartnumber: 第一个上传失败的分片编号（编号从0开始）
     """
 
-    def __init__(self, public_key, private_key):
+    def __init__(self, public_key, private_key, upload_suffix=None):
         """
         初始化 MultipartUploadUFile 实例
 
         :param public_key: string类型, 账户API公私钥中的公钥
         :param private_key: string类型, 账户API公私钥中的私钥
+        :param upload_suffix: string类型, 如果传入此参数, 则会忽略 config 中配置的 upload_suffix 字段
         :return: None，如果为非法的公私钥，则抛出ValueError异常
         """
         super(MultipartUploadUFile, self).__init__(public_key, private_key)
@@ -41,6 +42,7 @@ class MultipartUploadUFile(BaseUFile):
         self.__header = None
         self.__datastream = None
         self.__mimetype = None
+        self.__upload_suffix = upload_suffix
         self.pausepartnumber = 0
 
     def uploadstream(self, bucket, key, stream, maxthread=4, retrycount=3, retryinterval=5, mime_type=None, header=None):
@@ -96,18 +98,18 @@ class MultipartUploadUFile(BaseUFile):
         self.__header['Content-Type'] = self.__mimetype
         authorization = self.authorization('put', self.__bucket, self.__key, self.__header)
         self.__header['Authorization'] = authorization
-        
-        sem=threading.Semaphore(maxthread)  
+
+        sem=threading.Semaphore(maxthread)
         for data in _file_iter(self.__stream, self.blocksize):
             self.etaglist.append("")
-            thread1 = threading.Thread(target=self.__partthread, args=(sem, self.__bucket, self.__key, self.uploadid, self.pausepartnumber, self.__header, data, retrycount, retryinterval, self.etaglist))
+            thread1 = threading.Thread(target=self.__partthread, args=(sem, self.__bucket, self.__key, self.uploadid, self.pausepartnumber, self.__header, data, retrycount, retryinterval, self.etaglist, self.__upload_suffix))
             thread1.start()
             thread1.join()
             self.pausepartnumber += 1
-                            
+
         while threading.active_count()>1:
             time.sleep(5)
-                
+
         logger.info('start finish sharding request.')
         ret, resp = self.__finishupload()
         if not resp.ok():
@@ -155,7 +157,7 @@ class MultipartUploadUFile(BaseUFile):
         authorization = self.authorization('post', self.__bucket, self.__key, self.__header)
         self.__header['Authorization'] = authorization
 
-        url = initialsharding_url(self.__bucket, self.__key)
+        url = initialsharding_url(self.__bucket, self.__key, upload_suffix=self.__upload_suffix)
 
         logger.info('start initialize sharding')
         logger.info('initial sharding url: {0}'.format(url))
@@ -187,7 +189,7 @@ class MultipartUploadUFile(BaseUFile):
         logger.info(json.dumps(self.__header, indent=4))
         params = {'uploadId': self.uploadid}
 
-        url = finishsharding_url(self.__bucket, self.__key)
+        url = finishsharding_url(self.__bucket, self.__key, upload_suffix=self.__upload_suffix)
 
         logger.info('start finish sharding request')
         return _finishsharding(url, params, self.__header, data)
@@ -293,7 +295,7 @@ class MultipartUploadUFile(BaseUFile):
             ret = None
             resp = None
             for index in range(retrycount):
-                logger.info('retry {0} time sharding upload sharing {0}'.format(index + 1, self.pausepartnumber))
+                logger.info('retry {0} time sharding upload sharing {1}'.format(index + 1, self.pausepartnumber))
                 logger.info('sharding url:{0}'.format(url))
                 ret, resp = _shardingupload(url, data, self.__header)
                 if not resp.ok():
@@ -317,22 +319,21 @@ class MultipartUploadUFile(BaseUFile):
             logger.info('mulitpart upload succeed. uploadid: {0}, key: {1} SUCCEED!!!'.format(self.uploadid, self.__key))
         return ret, resp
 
-    def __partthread(self, sem, bucket, key, uploadid, part_number, header, data, retrycount, retryinterval, etaglist):
+    def __partthread(self, sem, bucket, key, uploadid, part_number, header, data, retrycount, retryinterval, etaglist, upload_suffix=None):
         with sem:
-            url = shardingupload_url(bucket, key, uploadid, part_number)
-            ret = None
+            url = shardingupload_url(bucket, key, uploadid, part_number, upload_suffix=upload_suffix)
             resp = None
             for index in range(retrycount):
                 logger.info('try {0} time sharding upload sharding {1}'.format(index + 1, part_number))
                 logger.info('sharding url:{0}'.format(url))
-                ret, resp = _shardingupload(url, data, header)
+                _, resp = _shardingupload(url, data, header)
                 if not resp.ok():
                     logger.error('failed {0} time when upload sharding {1}.error message: {2}, uploadid: {3}'.format(index + 1, part_number, resp.error, uploadid))
                     if index < retrycount - 1:
                         time.sleep(retryinterval)
                 else:
                     break
-                
+
             if not resp.ok():
                 logger.error('upload sharding {0} failed. uploadid: {1}'.format(part_number, uploadid))
                 exit("part upload failed!")

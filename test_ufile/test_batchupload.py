@@ -9,12 +9,15 @@ from ufile.config import BLOCKSIZE, get_default
 from ufile.compact import BytesIO,b
 import threading
 import time
+from common import *
 
 set_log_file()
-public_key = ''              #添加自己的账户公钥
-private_key = ''            #添加自己的账户私钥
-bucket = ''   #添加公共空间名称
+public_key = PUBLIC_KEY              #添加自己的账户公钥
+private_key = PRIVATE_KEY            #添加自己的账户私钥
+bucket = PUBLIC_BUCKET   #添加公共空间名称
 maxthreads = 30  #最大线程数
+
+batch_upload_dir = './'
 
 put_key_prefix = 'prefix_' #上传文件key
 
@@ -38,10 +41,9 @@ class BatchUploadUFileTestCase(unittest.TestCase):
     def test_batchupload(self):
         self.putufile_handler.set_keys(public_key, private_key)
 
-        path = "/home/temp/"
-        dirs = os.listdir(path)
+        dirs = os.listdir(batch_upload_dir)
         sem = threading.Semaphore(maxthreads)
-        for root, dirs, files in os.walk(path):
+        for root, dirs, files in os.walk(batch_upload_dir):
             for file in files:
                 sem.acquire()
                 local_file = os.path.join(root, file)

@@ -4,4 +4,4 @@
 UCloud UFile SDK for python
 """
 
-__version__ = '3.2.2'
+__version__ = '3.2.3'

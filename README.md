@@ -1,6 +1,37 @@
-本源码包含使用Python对UCloud的对象存储业务US3(原名UFile)进行空间和内容管理的API，适用于Python 2(2.6及以后)和Python 3(3.3及以后)
 
-## US3 对象存储基本概念
+Table of Contents
+=================
+
+   * [US3 对象存储基本概念](#us3-对象存储基本概念)
+      * [依赖的Python Package](#依赖的python-package)
+      * [文件目录说明](#文件目录说明)
+      * [安装](#安装)
+         * [本地安装](#本地安装)
+         * [使用 pip 安装](#使用-pip-安装)
+      * [开发文档生成](#开发文档生成)
+      * [功能说明](#功能说明)
+         * [公共参数说明](#公共参数说明)
+         * [设置默认参数](#设置默认参数)
+         * [设置日志文件](#设置日志文件)
+         * [空间管理](#空间管理)
+         * [支持普通上传](#支持普通上传)
+         * [支持表单上传](#支持表单上传)
+         * [支持秒传](#支持秒传)
+         * [支持文件下载](#支持文件下载)
+         * [支持删除文件](#支持删除文件)
+         * [支持分片上传和断点续传](#支持分片上传和断点续传)
+         * [支持解冻](#支持解冻)
+         * [支持文件类型转换](#支持文件类型转换)
+         * [比较本地文件和远程文件etag](#比较本地文件和远程文件etag)
+         * [获取文件列表](#获取文件列表)
+         * [获取目录文件列表](#获取目录文件列表)
+         * [支持拷贝](#支持拷贝)
+         * [支持重命名](#支持重命名)
+         
+
+
+本源码包含使用Python对UCloud的对象存储业务US3(原名UFile)进行空间和内容管理的API，适用于Python 2(2.6及以后)和Python 3(3.3及以后)
+# US3 对象存储基本概念
 在对象存储系统中，存储空间（Bucket）是文件（File）的组织管理单位，文件（File）是存储空间的逻辑存储单元。对于每个账号，该账号里存放的每个文件都有唯一的一对存储空间（Bucket）与键（Key）作为标识。我们可以把 Bucket 理解成一类文件的集合，Key 理解成文件名。由于每个 Bucket 需要配置和权限不同，每个账户里面会有多个 Bucket。在 US3 里面，Bucket 主要分为公有和私有两种，公有 Bucket 里面的文件可以对任何人开放，私有 Bucket 需要配置对应访问签名才能访问。
 
 ## 依赖的Python Package
@@ -80,6 +111,33 @@ from ufile import logger
 
 locallogname = '' #完整本地日志文件名
 logger.set_log_file(locallogname)
+```
+
+### 空间管理
+
+```python
+from ufile import bucketmanager
+
+bucketmanager_handler = bucketmanager.BucketManager(public_key, private_key)
+
+# 创建新的bucket
+bucketname = '' #创建的空间名称
+ret, resp = bucketmanager_handler.createbucket(bucketname, 'public')
+assert resp.status_code == 200
+
+# 删除bucket
+bucketname = '' #待删除的空间名称
+ret, resp = bucketmanager_handler.deletebucket(bucketname)
+print(ret)
+
+# 获取bucket信息
+bucketname = '' # 待查询的空间名称
+ret, resp = bucketmanager_handler.describebucket(public_bucket)
+print(ret)
+
+# 更改bucket属性
+bucketname = '' # 待更改的私有空间名称
+bucketmanager_handler.updatebucket(bucketname, 'public'):
 ```
 
 ### 支持普通上传
@@ -204,11 +262,11 @@ from ufile import filemanager
 downloadufile_handler = filemanager.FileManager(public_key, private_key)
 
 # 从公共空间下载文件
-ret, resp = downloadufile_handler.download_file(public_bucket, put_key, public_download, isprivate=False)
+ret, resp = downloadufile_handler.download_file(public_bucket, put_key, public_savefile, isprivate=False)
 assert resp.status_code == 200
 
 # 从私有空间下载文件
-ret, resp = downloadufile_handler.download_file(private_bucket, put_key, private_download)
+ret, resp = downloadufile_handler.download_file(private_bucket, put_key, private_savefile)
 assert resp.status_code == 200
 
 # 下载包含文件范围请求的文件
@@ -478,30 +536,3 @@ assert resp.status_code == 200
 | 403 | API公私钥错误 |
 | 401 | 上传凭证错误 |
 | 406 | 新文件名已存在 |
-
-### 空间管理
-
-```python
-from ufile import bucketmanager
-
-bucketmanager_handler = bucketmanager.BucketManager(public_key, private_key)
-
-# 创建新的bucket
-bucketname = '' #创建的空间名称
-ret, resp = bucketmanager_handler.createbucket(bucketname, 'public')
-assert resp.status_code == 200
-
-# 删除bucket
-bucketname = '' #待删除的空间名称
-ret, resp = bucketmanager_handler.deletebucket(bucketname)
-print(ret)
-
-# 获取bucket信息
-bucketname = '' # 待查询的空间名称
-ret, resp = bucketmanager_handler.describebucket(public_bucket)
-print(ret)
-
-# 更改bucket属性
-bucketname = '' # 待更改的私有空间名称
-bucketmanager_handler.updatebucket(bucketname, 'public'):
-```

@@ -14,19 +14,19 @@ Table of Contents
          * [设置默认参数](#设置默认参数)
          * [设置日志文件](#设置日志文件)
          * [空间管理](#空间管理)
-         * [支持普通上传](#支持普通上传)
-         * [支持表单上传](#支持表单上传)
-         * [支持秒传](#支持秒传)
-         * [支持文件下载](#支持文件下载)
-         * [支持删除文件](#支持删除文件)
-         * [支持分片上传和断点续传](#支持分片上传和断点续传)
-         * [支持解冻](#支持解冻)
-         * [支持文件类型转换](#支持文件类型转换)
+         * [普通上传](#普通上传)
+         * [表单上传](#表单上传)
+         * [秒传](#秒传)
+         * [文件下载](#文件下载)
+         * [删除文件](#删除文件)
+         * [分片上传和断点续传](#分片上传和断点续传)
+         * [解冻](#解冻)
+         * [文件类型转换](#文件类型转换)
          * [比较本地文件和远程文件etag](#比较本地文件和远程文件etag)
          * [获取文件列表](#获取文件列表)
          * [获取目录文件列表](#获取目录文件列表)
-         * [支持拷贝](#支持拷贝)
-         * [支持重命名](#支持重命名)
+         * [拷贝](#拷贝)
+         * [重命名](#重命名)
          
 
 
@@ -140,7 +140,7 @@ bucketname = '' # 待更改的私有空间名称
 bucketmanager_handler.updatebucket(bucketname, 'public'):
 ```
 
-### 支持普通上传
+### 普通上传
 
 * demo 程序
 
@@ -178,7 +178,7 @@ ret, resp = putufile_handler.putstream(public_bucket, stream_key, bio)
 | 403 | API公私钥错误 |
 | 401 | 上传凭证错误 |
 
-### 支持表单上传
+### 表单上传
 
 * demo程序
 
@@ -210,7 +210,7 @@ assert resp.status_code == 200
 | 403 | API公私钥错误 |
 | 401 | 上传凭证错误 |
 
-### 支持秒传
+### 秒传
 
 * demo程序
 
@@ -244,7 +244,7 @@ assert resp.status_code == 404
 | 401 | 上传凭证错误 |
 | 404 | 文件秒传失败 |
 
-### 支持文件下载
+### 文件下载
 
 * demo程序
 
@@ -286,7 +286,7 @@ assert resp.status_code == 206
 | 404 | 下载文件或数据不存在 |
 | 416 | 文件范围请求不合法 |
 
-### 支持删除文件
+### 删除文件
 
 * demo程序
 
@@ -316,7 +316,7 @@ assert resp.status_code == 204
 | 403 | API公私钥错误 |
 | 401 | 签名错误 |
 
-### 支持分片上传和断点续传
+### 分片上传和断点续传
 
 * demo程序
 
@@ -363,7 +363,7 @@ else:   # 服务器或者客户端错误
 | 403 | API公私钥错误 |
 | 401 | 上传凭证错误 |
 
-### 支持解冻
+### 解冻
 
 * demo 程序
 
@@ -396,7 +396,7 @@ assert resp.status_code == 200
 | 403 | API公私钥错误 |
 | 401 | 上传凭证错误 |
 
-### 支持文件类型转换
+### 文件类型转换
 
 * demo 程序
 
@@ -475,13 +475,13 @@ listobjects_hander = filemanager.FileManager(public_key, private_key)
 prefix=''     #以prefix作为前缀的目录文件列表
 maxkeys=100   #指定返回目录文件列表的最大数量
 marker=''     #返回以字母排序后，大于marker的目录文件列表
-delimiter='/' #delimiter是目录分隔符，当前只支持"/"和" "，当Delimiter设置为"/"时，返回目录形式的文件列表，当delimiter设置为" "时，返回非目录层级文件列表
+delimiter='/' #delimiter是目录分隔符，当前只"/"和" "，当Delimiter设置为"/"时，返回目录形式的文件列表，当delimiter设置为" "时，返回非目录层级文件列表
 
 ret, resp = listobjects_hander.listobjects(bucket, prefix=prefix, maxkeys=maxkeys, marker=marker, delimiter=delimiter)
 assert resp.status_code == 200
 ```
 
-### 支持拷贝
+### 拷贝
 
 * demo 程序
 
@@ -509,7 +509,7 @@ assert resp.status_code == 200
 | 403 | API公私钥错误 |
 | 401 | 上传凭证错误 |
 
-### 支持重命名
+### 重命名
 
 * demo 程序
 

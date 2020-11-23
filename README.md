@@ -2,24 +2,28 @@
 Table of Contents
 =================
 
-   * [US3 对象存储基本概念](#us3-对象存储基本概念)
+   * [概述](#概述)
+      * [US3 对象存储基本概念](#us3-对象存储基本概念)
       * [依赖的Python Package](#依赖的python-package)
       * [文件目录说明](#文件目录说明)
-      * [安装](#安装)
-         * [本地安装](#本地安装)
-         * [使用 pip 安装](#使用-pip-安装)
+   * [安装](#安装)
+      * [本地安装](#本地安装)
+      * [使用 pip 安装](#使用-pip-安装)
       * [开发文档生成](#开发文档生成)
-      * [功能说明](#功能说明)
-         * [公共参数说明](#公共参数说明)
-         * [设置默认参数](#设置默认参数)
-         * [设置日志文件](#设置日志文件)
-         * [空间管理](#空间管理)
+   * [快速使用](#快速使用)
+   * [默认参数设置](#默认参数设置)
+      * [公共参数说明](#公共参数说明)
+      * [设置默认参数](#设置默认参数)
+      * [设置日志文件](#设置日志文件)
+   * [示例代码](#示例代码)
+      * [存储空间管理](#存储空间管理)
+      * [对象/文件管理](#对象文件管理)
          * [普通上传](#普通上传)
          * [表单上传](#表单上传)
          * [秒传](#秒传)
+         * [分片上传和断点续传](#分片上传和断点续传)
          * [文件下载](#文件下载)
          * [删除文件](#删除文件)
-         * [分片上传和断点续传](#分片上传和断点续传)
          * [解冻](#解冻)
          * [文件类型转换](#文件类型转换)
          * [比较本地文件和远程文件etag](#比较本地文件和远程文件etag)
@@ -27,16 +31,20 @@ Table of Contents
          * [获取目录文件列表](#获取目录文件列表)
          * [拷贝](#拷贝)
          * [重命名](#重命名)
-         
 
 
 本源码包含使用Python对UCloud的对象存储业务US3(原名UFile)进行空间和内容管理的API，适用于Python 2(2.6及以后)和Python 3(3.3及以后)
-# US3 对象存储基本概念
+
+# 概述
+
+## US3 对象存储基本概念
+
 在对象存储系统中，存储空间（Bucket）是文件（File）的组织管理单位，文件（File）是存储空间的逻辑存储单元。对于每个账号，该账号里存放的每个文件都有唯一的一对存储空间（Bucket）与键（Key）作为标识。我们可以把 Bucket 理解成一类文件的集合，Key 理解成文件名。由于每个 Bucket 需要配置和权限不同，每个账户里面会有多个 Bucket。在 US3 里面，Bucket 主要分为公有和私有两种，公有 Bucket 里面的文件可以对任何人开放，私有 Bucket 需要配置对应访问签名才能访问。
 
 ## 依赖的Python Package
 
 * **requests**
+可使用``` pip install requests```安装
 
 ## 文件目录说明
 
@@ -46,23 +54,36 @@ Table of Contents
 * test_ufile文件夹:           测试文件
 * examples:                  示例代码
 
-## 安装
+# 安装
 
-### 本地安装
+## 本地安装
 
 ```bash
 $ git clone https://github.com/ucloud/ufile-sdk-python.git
 $ git checkout <tag/branch>
 $ cd ufile-sdk-python
 $ python setup.py install
+
+#卸载
+$ python setup.py install --record files.txt #获取安装程序安装的文件名
+$ cat files.txt | xargs rm -rf          #删除这些文件
 ```
 
-### 使用 pip 安装
+## 使用 pip 安装
 
 ```bash
 $ pip install ufile
 # 如果你要使用 pre-release 版本
 $ pip install --pre ufile
+
+# 如果未安装pip
+# pip官网：https://pypi.org/project/pip/
+# 或者使用以下方法来安装：
+$ curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py   # 下载安装脚本
+$ sudo python get-pip.py    # 运行安装脚本 Python3则执行：sudo python3 get-pip.py 
+
+#卸载
+$ pip uninstall ufile
 ```
 
 **注意：在国内的 pip 源会由于网络问题无法更新，建议加上国内的 python 源。**
@@ -72,11 +93,46 @@ $ pip install --pre ufile
 
 docs文件夹包含基于sphinx的开发文档生成文件，在此文件夹下可通过运行make html命令可生成build目录，build/html目录即为开发文档
 
-## 功能说明
+# 快速使用
+
+```python
+PUBLIC_KEY = ''              #账户公钥
+PRIVATE_KEY = ''             #账户私钥
+
+bucket = ''      #公共空间名称
+localfile = ''          #本地文件名
+put_key = ''            #上传文件在空间中的名称
+savefile = ''         #下载文件保存的文件名
+
+from ufile import filemanager
+
+ufile_handler = filemanager.FileManager(public_key, private_key)
+
+# 上传文件
+ret, resp = ufile_handler.putfile(bucket, put_key, localfile, header=None)
+assert resp.status_code == 200
+
+# 下载文件
+_, resp = ufile_handler.download_file(bucket, put_key, savefile)
+assert resp.status_code == 200
+
+# 遍历空间里所有文件
+ret, resp = ufile_handler.getfilelist(bucket)
+assert resp.status_code == 200
+for object in ret["DataSet"]:
+    print(object)
+
+# 删除文件
+ret, resp = ufile_handler.deletefile(bucket, put_key)
+assert resp.status_code == 204
+```
+
+# 默认参数设置
 
 ufile文件夹包含SDK的具体实现，该文件夹亦是名为ufile的package的源码文件夹
 
-### 公共参数说明
+
+## 公共参数说明
 
 ```python
 public_key = ''         #公钥或token
@@ -85,7 +141,7 @@ private_key = ''        #私钥或token
 
 [如何创建一个token？](https://console.ucloud.cn/ufile/token)
 
-### 设置默认参数
+## 设置默认参数
 
 ```python
 from ufile import config
@@ -104,7 +160,7 @@ config.set_default(md5=True)
 
 * 如果在实例化 FileManager 和 MultipartUploadUFile 实例时传入相关参数，则生成的实例会使用传入的值，而不是此处设置的默认值。
 
-### 设置日志文件
+## 设置日志文件
 
 ```python
 from ufile import logger
@@ -113,7 +169,9 @@ locallogname = '' #完整本地日志文件名
 logger.set_log_file(locallogname)
 ```
 
-### 空间管理
+# 示例代码
+
+## 存储空间管理
 
 ```python
 from ufile import bucketmanager
@@ -139,6 +197,8 @@ print(ret)
 bucketname = '' # 待更改的私有空间名称
 bucketmanager_handler.updatebucket(bucketname, 'public'):
 ```
+
+## 对象/文件管理
 
 ### 普通上传
 
@@ -171,12 +231,12 @@ ret, resp = putufile_handler.putstream(public_bucket, stream_key, bio)
 
 * HTTP 返回状态码
 
-| 状态码 | 描述 |
-| -----  | ---- |
-| 200 | 文件或者数据上传成功 |
-| 400 | 上传到不存在的空间 |
-| 403 | API公私钥错误 |
-| 401 | 上传凭证错误 |
+| 状态码 | 描述                 |
+| ------ | -------------------- |
+| 200    | 文件或者数据上传成功 |
+| 400    | 上传到不存在的空间   |
+| 403    | API公私钥错误        |
+| 401    | 上传凭证错误         |
 
 ### 表单上传
 
@@ -203,12 +263,12 @@ assert resp.status_code == 200
 
 * HTTP 返回状态码
 
-| 状态码 | 描述 |
-| -----  | ---- |
-| 200 | 文件或者数据上传成功 |
-| 400 | 上传到不存在的空间 |
-| 403 | API公私钥错误 |
-| 401 | 上传凭证错误 |
+| 状态码 | 描述                 |
+| ------ | -------------------- |
+| 200    | 文件或者数据上传成功 |
+| 400    | 上传到不存在的空间   |
+| 403    | API公私钥错误        |
+| 401    | 上传凭证错误         |
 
 ### 秒传
 
@@ -236,85 +296,13 @@ assert resp.status_code == 404
 
 * HTTP 状态返回码
 
-| 状态码 | 描述 |
-| ------ | ---- |
-| 200 | 文件秒传成功 |
-| 400 | 上传到不存在的空间 |
-| 403 | API公私钥错误 |
-| 401 | 上传凭证错误 |
-| 404 | 文件秒传失败 |
-
-### 文件下载
-
-* demo程序
-
-```python
-public_bucket = ''          #公共空间名称
-private_bucket = ''         #私有空间名称
-public_savefile = ''        #保存文件名
-private_savefile = ''       #保存文件名
-range_savefile = ''         #保存文件名
-put_key = ''                #文件在空间中的名称
-stream_key = ''             #文件在空间中的名称
-
-from ufile import filemanager
-
-downloadufile_handler = filemanager.FileManager(public_key, private_key)
-
-# 从公共空间下载文件
-ret, resp = downloadufile_handler.download_file(public_bucket, put_key, public_savefile, isprivate=False)
-assert resp.status_code == 200
-
-# 从私有空间下载文件
-ret, resp = downloadufile_handler.download_file(private_bucket, put_key, private_savefile)
-assert resp.status_code == 200
-
-# 下载包含文件范围请求的文件
-ret, resp = downloadufile_handler.download_file(public_bucket, put_key, range_savefile, isprivate=False, expires=300, content_range=(0, 15))
-assert resp.status_code == 206
-```
-
-* HTTP 返回状态码
-
-| 状态码 | 描述 |
-| -----  | ---- |
-| 200 | 文件或者数据下载成功 |
-| 206 | 文件或者数据范围下载成功 |
-| 400 | 不存在的空间 |
-| 403 | API公私钥错误 |
-| 401 | 下载签名错误 |
-| 404 | 下载文件或数据不存在 |
-| 416 | 文件范围请求不合法 |
-
-### 删除文件
-
-* demo程序
-
-```python
-public_bucket = ''              #公共空间名称
-private_bucekt = ''             #私有空间名称
-delete_key = ''                 #文件在空间中的名称
-
-from ufile import filemanager
-
-deleteufile_handler = filemanager.FileManager(public_key, private_key)
-
-# 删除公共空间的文件
-ret, resp = deleteufile_handler.deletefile(public_bucket, delete_key)
-assert resp.status_code == 204
-
-# 删除私有空间的文件
-ret, resp = deleteufile_handler.deletefile(private_bucket, delete_key)
-assert resp.status_code == 204
-```
-
-* HTTP 返回状态码
-
-| 状态码 | 描述 |
-| -----  | ---- |
-| 204 | 文件或者数据删除成功 |
-| 403 | API公私钥错误 |
-| 401 | 签名错误 |
+| 状态码 | 描述               |
+| ------ | ------------------ |
+| 200    | 文件秒传成功       |
+| 400    | 上传到不存在的空间 |
+| 403    | API公私钥错误      |
+| 401    | 上传凭证错误       |
+| 404    | 文件秒传失败       |
 
 ### 分片上传和断点续传
 
@@ -356,12 +344,84 @@ else:   # 服务器或者客户端错误
 
 * HTTP 返回状态码
 
-| 状态码 | 描述 |
-| -----  | ---- |
-| 200 | 文件或者数据上传成功 |
-| 400 | 上传到不存在的空间 |
-| 403 | API公私钥错误 |
-| 401 | 上传凭证错误 |
+| 状态码 | 描述                 |
+| ------ | -------------------- |
+| 200    | 文件或者数据上传成功 |
+| 400    | 上传到不存在的空间   |
+| 403    | API公私钥错误        |
+| 401    | 上传凭证错误         |
+
+### 文件下载
+
+* demo程序
+
+```python
+public_bucket = ''          #公共空间名称
+private_bucket = ''         #私有空间名称
+public_savefile = ''        #保存文件名
+private_savefile = ''       #保存文件名
+range_savefile = ''         #保存文件名
+put_key = ''                #文件在空间中的名称
+stream_key = ''             #文件在空间中的名称
+
+from ufile import filemanager
+
+downloadufile_handler = filemanager.FileManager(public_key, private_key)
+
+# 从公共空间下载文件
+ret, resp = downloadufile_handler.download_file(public_bucket, put_key, public_savefile, isprivate=False)
+assert resp.status_code == 200
+
+# 从私有空间下载文件
+ret, resp = downloadufile_handler.download_file(private_bucket, put_key, private_savefile)
+assert resp.status_code == 200
+
+# 下载包含文件范围请求的文件
+ret, resp = downloadufile_handler.download_file(public_bucket, put_key, range_savefile, isprivate=False, expires=300, content_range=(0, 15))
+assert resp.status_code == 206
+```
+
+* HTTP 返回状态码
+
+| 状态码 | 描述                     |
+| ------ | ------------------------ |
+| 200    | 文件或者数据下载成功     |
+| 206    | 文件或者数据范围下载成功 |
+| 400    | 不存在的空间             |
+| 403    | API公私钥错误            |
+| 401    | 下载签名错误             |
+| 404    | 下载文件或数据不存在     |
+| 416    | 文件范围请求不合法       |
+
+### 删除文件
+
+* demo程序
+
+```python
+public_bucket = ''              #公共空间名称
+private_bucekt = ''             #私有空间名称
+delete_key = ''                 #文件在空间中的名称
+
+from ufile import filemanager
+
+deleteufile_handler = filemanager.FileManager(public_key, private_key)
+
+# 删除公共空间的文件
+ret, resp = deleteufile_handler.deletefile(public_bucket, delete_key)
+assert resp.status_code == 204
+
+# 删除私有空间的文件
+ret, resp = deleteufile_handler.deletefile(private_bucket, delete_key)
+assert resp.status_code == 204
+```
+
+* HTTP 返回状态码
+
+| 状态码 | 描述                 |
+| ------ | -------------------- |
+| 204    | 文件或者数据删除成功 |
+| 403    | API公私钥错误        |
+| 401    | 签名错误             |
 
 ### 解冻
 
@@ -389,12 +449,12 @@ assert resp.status_code == 200
 
 * HTTP 返回状态码
 
-| 状态码 | 描述 |
-| -----  | ---- |
-| 200 | 文件解冻成功 |
-| 400 | 不存在的空间 或 文件类型非冷存 |
-| 403 | API公私钥错误 |
-| 401 | 上传凭证错误 |
+| 状态码 | 描述                           |
+| ------ | ------------------------------ |
+| 200    | 文件解冻成功                   |
+| 400    | 不存在的空间 或 文件类型非冷存 |
+| 403    | API公私钥错误                  |
+| 401    | 上传凭证错误                   |
 
 ### 文件类型转换
 
@@ -423,12 +483,12 @@ assert resp.status_code == 200
 
 * HTTP 返回状态码
 
-| 状态码 | 描述 |
-| -----  | ---- |
-| 200 | 文件转换类型成功 |
-| 400 | 不存在的空间 |
-| 403 | API公私钥错误 或 冷存文件尚未解冻不允许转换文件类型 |
-| 401 | 上传凭证错误 |
+| 状态码 | 描述                                                |
+| ------ | --------------------------------------------------- |
+| 200    | 文件转换类型成功                                    |
+| 400    | 不存在的空间                                        |
+| 403    | API公私钥错误 或 冷存文件尚未解冻不允许转换文件类型 |
+| 401    | 上传凭证错误                                        |
 
 ### 比较本地文件和远程文件etag
 
@@ -502,12 +562,12 @@ assert resp.status_code == 200
 
 * HTTP 返回状态码
 
-| 状态码 | 描述 |
-| -----  | ---- |
-| 200 | 文件拷贝成功 |
-| 400 | 不存在的空间 |
-| 403 | API公私钥错误 |
-| 401 | 上传凭证错误 |
+| 状态码 | 描述          |
+| ------ | ------------- |
+| 200    | 文件拷贝成功  |
+| 400    | 不存在的空间  |
+| 403    | API公私钥错误 |
+| 401    | 上传凭证错误  |
 
 ### 重命名
 
@@ -529,10 +589,10 @@ assert resp.status_code == 200
 
 * HTTP 返回状态码
 
-| 状态码 | 描述 |
-| -----  | ---- |
-| 200 | 文件重命名成功 |
-| 400 | 不存在的空间 |
-| 403 | API公私钥错误 |
-| 401 | 上传凭证错误 |
-| 406 | 新文件名已存在 |
+| 状态码 | 描述           |
+| ------ | -------------- |
+| 200    | 文件重命名成功 |
+| 400    | 不存在的空间   |
+| 403    | API公私钥错误  |
+| 401    | 上传凭证错误   |
+| 406    | 新文件名已存在 |

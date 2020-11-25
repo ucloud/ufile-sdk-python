@@ -96,24 +96,24 @@ docs文件夹包含基于sphinx的开发文档生成文件，在此文件夹下�
 # 快速使用
 
 ```python
-PUBLIC_KEY = ''              #账户公钥
-PRIVATE_KEY = ''             #账户私钥
+public_key = ''              #账户公钥
+private_key = ''             #账户私钥
 
-bucket = ''      #公共空间名称
-localfile = ''          #本地文件名
-put_key = ''            #上传文件在空间中的名称
-savefile = ''         #下载文件保存的文件名
+bucket = ''                  #公共空间名称
+local_file = ''              #本地文件名
+put_key = ''                 #上传文件在空间中的名称
+save_file = ''               #下载文件保存的文件名
 
 from ufile import filemanager
 
 ufile_handler = filemanager.FileManager(public_key, private_key)
 
 # 上传文件
-ret, resp = ufile_handler.putfile(bucket, put_key, localfile, header=None)
+ret, resp = ufile_handler.putfile(bucket, put_key, local_file, header=None)
 assert resp.status_code == 200
 
 # 下载文件
-_, resp = ufile_handler.download_file(bucket, put_key, savefile)
+_, resp = ufile_handler.download_file(bucket, put_key, save_file)
 assert resp.status_code == 200
 
 # 遍历空间里所有文件
@@ -174,13 +174,17 @@ logger.set_log_file(locallogname)
 ## 存储空间管理
 
 ```python
+public_key = ''         #账户公钥
+private_key = ''        #账户私钥
+
 from ufile import bucketmanager
 
 bucketmanager_handler = bucketmanager.BucketManager(public_key, private_key)
 
 # 创建新的bucket
 bucketname = '' #创建的空间名称
-ret, resp = bucketmanager_handler.createbucket(bucketname, 'public')
+region = 'cn-bj'#空间所在的地理区域
+ret, resp = bucketmanager_handler.createbucket(bucketname, region,'public')
 assert resp.status_code == 200
 
 # 删除bucket
@@ -190,12 +194,12 @@ print(ret)
 
 # 获取bucket信息
 bucketname = '' # 待查询的空间名称
-ret, resp = bucketmanager_handler.describebucket(public_bucket)
+ret, resp = bucketmanager_handler.describebucket(bucketname)
 print(ret)
 
 # 更改bucket属性
 bucketname = '' # 待更改的私有空间名称
-bucketmanager_handler.updatebucket(bucketname, 'public'):
+bucketmanager_handler.updatebucket(bucketname, 'public')
 ```
 
 ## 对象/文件管理
@@ -205,9 +209,12 @@ bucketmanager_handler.updatebucket(bucketname, 'public'):
 * demo 程序
 
 ```python
+public_key = ''         #账户公钥
+private_key = ''        #账户私钥
+
 public_bucket = ''      #公共空间名称
 private_bucket = ''     #私有空间名称
-localfile = ''          #本地文件名
+local_file = ''         #本地文件名
 put_key = ''            #上传文件在空间中的名称
 
 from ufile import filemanager
@@ -215,11 +222,11 @@ from ufile import filemanager
 putufile_handler = filemanager.FileManager(public_key, private_key)
 
 # 普通上传文件至公共空间
-ret, resp = putufile_handler.putfile(public_bucket, put_key, localfile, header=None)
+ret, resp = putufile_handler.putfile(public_bucket, put_key, local_file, header=None)
 assert resp.status_code == 200
 
 # 普通上传文件至私有空间
-ret, resp = putufile_handler.putfile(private_bucket, put_key, localfile, header=None)
+ret, resp = putufile_handler.putfile(private_bucket, put_key, local_file, header=None)
 assert resp.status_code == 200
 
 # 普通上传二进制数据流至公共空间
@@ -243,9 +250,12 @@ ret, resp = putufile_handler.putstream(public_bucket, stream_key, bio)
 * demo程序
 
 ```python
+public_key = ''         #账户公钥
+private_key = ''        #账户私钥
+
 public_bucket = ''      #公共空间名称
 private_bucket = ''     #私有空间名称
-localfile = ''          #本地文件名
+local_file = ''         #本地文件名
 post_key = ''           #上传文件在空间中的名称
 
 from ufile import filemanager
@@ -253,11 +263,11 @@ from ufile import filemanager
 postufile_handler = filemanager.FileManager(public_key, private_key)
 
 # 表单上传至公共空间
-ret, resp = postufile_handler.postfile(public_bucket, post_key, localfile)
+ret, resp = postufile_handler.postfile(public_bucket, post_key, local_file)
 assert resp.status_code == 200
 
 # 表单上传至私有空间
-ret, resp = postufile_handler.postfile(private_bucket, post_key, localfile)
+ret, resp = postufile_handler.postfile(private_bucket, post_key, local_file)
 assert resp.status_code == 200
 ```
 
@@ -275,6 +285,9 @@ assert resp.status_code == 200
 * demo程序
 
 ```python
+public_key = ''         #账户公钥
+private_key = ''        #账户私钥
+
 public_bucket = ''      #公共空间名称
 existkey = ''           #添加上传文件在空间中的名称
 nonexistkey = ''        #添加上传文件在空间中的名称
@@ -309,37 +322,40 @@ assert resp.status_code == 404
 * demo程序
 
 ```python
+public_key = ''         #账户公钥
+private_key = ''        #账户私钥
+
 public_bucket = ''      #公共空间名称
 sharding_key = ''       #上传文件在空间中的名称
-localfile = ''          #本地文件名
+local_file = ''         #本地文件名
 
 from ufile import multipartuploadufile
 
 multipartuploadufile_handler = multipartuploadufile.MultipartUploadUFile(public_key, private_key)
 
 # 分片上传一个全新的文件
-ret, resp = multipartuploadufile_handler.uploadfile(public_bucket, sharding_key, localfile)
+ret, resp = multipartuploadufile_handler.uploadfile(public_bucket, sharding_key, local_file)
 while True:
-if resp.status_code == 200: # 分片上传成功
-    break
-elif resp.status_code == -1:    # 网络连接问题，续传
-    ret, resp = multipartuploadufile_handler.resumeuploadfile()
-else:   # 服务或者客户端错误
-    print(resp.error)
-    break
+    if resp.status_code == 200: # 分片上传成功
+        break
+    elif resp.status_code == -1:    # 网络连接问题，续传
+        ret, resp = multipartuploadufile_handler.resumeuploadfile()
+    else:   # 服务或者客户端错误
+        print(resp.error)
+        break
 
 # 分片上传一个全新的二进制数据流
 from io import BytesIO
 bio = BytesIO(u'你好'.encode('utf-8'))
 ret, resp = multipartuploadufile_handler.uploadstream(public_bucket, sharding_key, bio)
 while True:
-if resp.status_code == 200:     # 分片上传成功
-    break
-elif resp.status_code == -1:    # 网络连接问题，续传
-    ret, resp = multipartuploadufile_handler.resumeuploadstream()
-else:   # 服务器或者客户端错误
-    print(resp.error)
-    break
+    if resp.status_code == 200:     # 分片上传成功
+        break
+    elif resp.status_code == -1:    # 网络连接问题，续传
+        ret, resp = multipartuploadufile_handler.resumeuploadstream()
+    else:   # 服务器或者客户端错误
+        print(resp.error)
+        break
 ```
 
 * HTTP 返回状态码
@@ -356,13 +372,16 @@ else:   # 服务器或者客户端错误
 * demo程序
 
 ```python
-public_bucket = ''          #公共空间名称
-private_bucket = ''         #私有空间名称
-public_savefile = ''        #保存文件名
-private_savefile = ''       #保存文件名
-range_savefile = ''         #保存文件名
-put_key = ''                #文件在空间中的名称
-stream_key = ''             #文件在空间中的名称
+public_key = ''                 #账户公钥
+private_key = ''                #账户私钥
+
+public_bucket = ''              #公共空间名称
+private_bucket = ''             #私有空间名称
+public_savefile = ''            #保存文件名
+private_savefile = ''           #保存文件名
+range_savefile = ''             #保存文件名
+put_key = ''                    #文件在空间中的名称
+stream_key = ''                 #文件在空间中的名称
 
 from ufile import filemanager
 
@@ -398,6 +417,9 @@ assert resp.status_code == 206
 * demo程序
 
 ```python
+public_key = ''                 #账户公钥
+private_key = ''                #账户私钥
+
 public_bucket = ''              #公共空间名称
 private_bucekt = ''             #私有空间名称
 delete_key = ''                 #文件在空间中的名称
@@ -428,21 +450,26 @@ assert resp.status_code == 204
 * demo 程序
 
 ```python
-public_bucket = ''		#公共空间名称
-localfile = ''			#本地文件名
-put_key = ''			#上传文件在空间中的名称
-ARCHIVE = 'ARCHIVE'		#冷存文件类型
+public_key = ''                 #账户公钥
+private_key = ''                #账户私钥
+
+public_bucket = ''              #公共空间名称
+local_file = ''                 #本地文件名
+put_key = ''                    #上传文件在空间中的名称
+ARCHIVE = 'ARCHIVE'             #冷存文件类型
 
 from ufile import filemanager
 
 putufile_handler = filemanager.FileManager(public_key, private_key)
 restorefile_handler = filemanager.FileManager(public_key, private_key)
 
-# 普通上传冷存文件至公共空间
-ret, resp = putufile_handler.putfile(public_bucket, put_key, localfile, ARCHIVE, header=None)
-assert rest.status_code == 200
+# 普通上传归档类型的文件至公共空间
+header = dict()
+header['X-Ufile-Storage-Class'] = ARCHIVE
+ret, resp = putufile_handler.putfile(public_bucket, put_key, local_file,  header=header)
+assert resp.status_code == 200
 
-# 解冻冷存文件
+# 解冻归档类型的文件
 ret, resp = restorefile_handler.restore_file(public_bucket, put_key)
 assert resp.status_code == 200
 ```
@@ -461,11 +488,14 @@ assert resp.status_code == 200
 * demo 程序
 
 ```python
-public_bucket = ''		#公共空间名称
-localfile = ''			#本地文件名
-put_key = ''			#上传文件在空间中的名称
-STANDARD = 'STANDARD'		#标准文件类型
-IA = 'IA'			#低频文件类型
+public_key = ''                 #账户公钥
+private_key = ''                #账户私钥
+
+public_bucket = ''              #公共空间名称
+local_file = ''                 #本地文件名
+put_key = ''                    #上传文件在空间中的名称
+STANDARD = 'STANDARD'           #标准文件类型
+IA = 'IA'                       #低频文件类型
 
 from ufile import filemanager
 
@@ -473,8 +503,10 @@ putufile_handler = filemanager.FileManager(public_key, private_key)
 classswitch_handler = filemanager.FileManager(public_key, private_key)
 
 # 普通上传文件至公共空间
-ret, resp = putufile_handler.putfile(public_bucket, put_key, localfile, STANDARD, header=None)
-assert rest.status_code == 200
+header = dict()
+header['X-Ufile-Storage-Class'] = STANDARD
+ret, resp = putufile_handler.putfile(public_bucket, put_key, local_file, header=header)
+assert resp.status_code == 200
 
 # 标准文件类型转换为低频文件类型
 ret, resp = classswitch_handler.class_switch_file(public_bucket, put_key, IA)
@@ -495,22 +527,28 @@ assert resp.status_code == 200
 ```python
 from ufile import filemanager
 
-public_bucket = ''    #添加公共空间名称
-put_key = ''          #添加远程文件key
-local_file=''         #添加本地文件路径
+public_key = ''                 #账户公钥
+private_key = ''                #账户私钥
+
+public_bucket = ''              #添加公共空间名称
+put_key = ''                    #添加远程文件key
+local_file=''                   #添加本地文件路径
 
 compare_handler = filemanager.FileManager(public_key, private_key)
 result=compare_handler.compare_file_etag(public_bucket,put_key,local_file)
 if result==True:
-    logger.info('\netag are the same!')
+    print('etag are the same!')
 else:
-    logger.info('\netag are different!')
+    print('etag are different!')
 ```
 
 ### 获取文件列表
 
 ```python
-bucket = ''		#空间名称
+public_key = ''                 #账户公钥
+private_key = ''                #账户私钥
+
+bucket = ''                     #添加空间名称
 
 from ufile import filemanager
 
@@ -521,12 +559,17 @@ limit=10  #文件列表数目
 marker='' #文件列表起始位置
 ret, resp = getfilelist_hander.getfilelist(bucket, prefix=prefix, limit=limit, marker=marker)
 assert resp.status_code == 200
+for object in ret["DataSet"]:
+    print(object)
 ```
 
 ### 获取目录文件列表
 
 ```python
-bucket = ''		#空间名称
+public_key = ''                 #账户公钥
+private_key = ''                #账户私钥
+
+bucket = ''                     #添加空间名称
 
 from ufile import filemanager
 
@@ -546,10 +589,12 @@ assert resp.status_code == 200
 * demo 程序
 
 ```python
-public_bucket = ''		#公共空间名称
-key = ''			#目的文件在空间中的名称
-srcbucket = ''			#源文件所在空间名称
-srckey = ''		        #源文件名称
+public_key = ''                 #账户公钥
+private_key = ''                #账户私钥
+public_bucket = ''              #公共空间名称
+key = ''                        #目的文件在空间中的名称
+srcbucket = ''                  #源文件所在空间名称
+srckey = ''                     #源文件名称
 
 from ufile import filemanager
 
@@ -574,15 +619,18 @@ assert resp.status_code == 200
 * demo 程序
 
 ```python
-public_bucket = ''		#公共空间名称
-key = ''			#源文件在空间中的名称
-newkey = ''			#目的文件在空间中的名称
+public_key = ''                 #账户公钥
+private_key = ''                #账户私钥
+
+public_bucket = ''              #公共空间名称
+key = ''                        #源文件在空间中的名称
+newkey = ''                     #目的文件在空间中的名称
 
 from ufile import filemanager
 
 renameufile_handler = filemanager.FileManager(public_key, private_key)
 
-# 拷贝文件
+# 重命名文件
 ret, resp = renameufile_handler.rename(public_bucket, key, newkey, 'true')
 assert resp.status_code == 200
 ```

@@ -3,8 +3,6 @@ Table of Contents
 =================
 
    * [概述](#概述)
-      * [US3 对象存储基本概念](#us3-对象存储基本概念)
-      * [依赖的Python Package](#依赖的python-package)
       * [文件目录说明](#文件目录说明)
    * [安装](#安装)
       * [本地安装](#本地安装)
@@ -31,28 +29,26 @@ Table of Contents
          * [获取目录文件列表](#获取目录文件列表)
          * [拷贝](#拷贝)
          * [重命名](#重命名)
+   * [版本记录](#版本记录)
+   * [联系我们](#联系我们)
 
 
-本源码包含使用Python对UCloud的对象存储业务US3(原名UFile)进行空间和内容管理的API，适用于Python 2(2.6及以后)和Python 3(3.3及以后)
+本源码包含使用Python对UCloud的对象存储业务US3(原名UFile)进行空间和内容管理的API，适用于Python 2(2.6及以后)和Python 3(3.3及以后)。
 
 # 概述
 
-## US3 对象存储基本概念
-
-在对象存储系统中，存储空间（Bucket）是文件（File）的组织管理单位，文件（File）是存储空间的逻辑存储单元。对于每个账号，该账号里存放的每个文件都有唯一的一对存储空间（Bucket）与键（Key）作为标识。我们可以把 Bucket 理解成一类文件的集合，Key 理解成文件名。由于每个 Bucket 需要配置和权限不同，每个账户里面会有多个 Bucket。在 US3 里面，Bucket 主要分为公有和私有两种，公有 Bucket 里面的文件可以对任何人开放，私有 Bucket 需要配置对应访问签名才能访问。
-
-## 依赖的Python Package
-
-* **requests**
-可使用``` pip install requests```安装
+本源码包含使用Python对UCloud的对象存储业务US3(原名UFile)进行空间和内容管理的API，适用于Python 2(2.6及以后)和Python 3(3.3及以后)。
 
 ## 文件目录说明
 
-* docs文件夹:                 开发文档生成文件
-* ufile文件夹:                SDK的具体实现
-* setup.py:                  package安装文件
-* test_ufile文件夹:           测试文件
-* examples:                  示例代码
+```shell
+UFILE-SDK-PYTHON
+├─docs			开发文档生成目录
+├─examples		示例代码存放目录
+├─setup.py		package安装文件
+├─test_ufile	测试文件存放目录
+├─ufile			SDK的具体实现
+```
 
 # 安装
 
@@ -66,7 +62,7 @@ $ python setup.py install
 
 #卸载
 $ python setup.py install --record files.txt #获取安装程序安装的文件名
-$ cat files.txt | xargs rm -rf          #删除这些文件
+$ cat files.txt | xargs rm -rf               #删除这些文件
 ```
 
 ## 使用 pip 安装
@@ -87,11 +83,10 @@ $ pip uninstall ufile
 ```
 
 **注意：在国内的 pip 源会由于网络问题无法更新，建议加上国内的 python 源。**
-具体请见：[如何添加 python 国内源？](https://www.baidu.com/s?wd=python%20%E5%9B%BD%E5%86%85%E6%BA%90&rsv_spt=1&rsv_iqid=0xd4c874b700022c35&issp=1&f=8&rsv_bp=1&rsv_idx=2&ie=utf-8&rqlang=cn&tn=baiduhome_pg&rsv_enter=0&rsv_t=ca7cGiKHZYyi4WMSjK1f%2BXazzuAjqbqCTbXjSrEq6oiaXwF3im1hQl9E9xE9fKWkDccY&oq=python%2520%25E5%259B%25BD%25E5%2586%2585%25E6%25BA%2590&rsv_pq=ba65a2f20001ea73)
 
 ## 开发文档生成
 
-docs文件夹包含基于sphinx的开发文档生成文件，在此文件夹下可通过运行make html命令可生成build目录，build/html目录即为开发文档
+docs文件夹包含基于sphinx的开发文档生成文件，在此文件夹下可通过运行make html命令可生成build目录，build/html目录即为开发文档。
 
 # 快速使用
 
@@ -129,7 +124,7 @@ assert resp.status_code == 204
 
 # 默认参数设置
 
-ufile文件夹包含SDK的具体实现，该文件夹亦是名为ufile的package的源码文件夹
+ufile文件夹包含SDK的具体实现，该文件夹亦是名为ufile的package的源码文件夹。
 
 
 ## 公共参数说明
@@ -173,6 +168,10 @@ logger.set_log_file(locallogname)
 
 ## 存储空间管理
 
+* 说明
+  * 在上传文件（Object）到 US3 之前，您需要使用 createbucket来创建一个用于存储文件的存储空间（Bucket），存储空间具有各种配置属性，包括地域、访问权限以及其他元数据。
+  * 必、删除存储空间中的所有文件和未完成的分片文件后，存储空间才能成功删除。如果存储空间不为空（存储空间中有文件或者是尚未完成的分片上传），则存储空间无法删除。
+
 ```python
 public_key = ''         #账户公钥
 private_key = ''        #账户私钥
@@ -206,14 +205,16 @@ bucketmanager_handler.updatebucket(bucketname, 'public')
 
 ### 普通上传
 
+* 说明
+  普通上传适用于一次HTTP请求交互即可完成上传的场景，比如小文件（小于1GB）的上传。大文件（大于1GB）的上传请使用分片上传。
+
 * demo 程序
 
 ```python
 public_key = ''         #账户公钥
 private_key = ''        #账户私钥
 
-public_bucket = ''      #公共空间名称
-private_bucket = ''     #私有空间名称
+bucket = ''      		#空间名称
 local_file = ''         #本地文件名
 put_key = ''            #上传文件在空间中的名称
 
@@ -221,19 +222,15 @@ from ufile import filemanager
 
 putufile_handler = filemanager.FileManager(public_key, private_key)
 
-# 普通上传文件至公共空间
-ret, resp = putufile_handler.putfile(public_bucket, put_key, local_file, header=None)
+# 普通上传文件至空间
+ret, resp = putufile_handler.putfile(bucket, put_key, local_file, header=None)
 assert resp.status_code == 200
 
-# 普通上传文件至私有空间
-ret, resp = putufile_handler.putfile(private_bucket, put_key, local_file, header=None)
-assert resp.status_code == 200
-
-# 普通上传二进制数据流至公共空间
+# 普通上传二进制数据流至空间
 from io import BytesIO
 bio = BytesIO(u'Do be a good man'.encode('utf-8'))  #二进制数据流
-stream_key = ''                         #上传数据流在空间中的名称
-ret, resp = putufile_handler.putstream(public_bucket, stream_key, bio)
+stream_key = ''                         			#上传数据流在空间中的名称
+ret, resp = putufile_handler.putstream(bucket, stream_key, bio)
 ```
 
 * HTTP 返回状态码
@@ -247,14 +244,16 @@ ret, resp = putufile_handler.putstream(public_bucket, stream_key, bio)
 
 ### 表单上传
 
+* 说明
+  适合嵌入在HTML网页中来上传Object，比较常见的场景是网站应用。上传的Object不能超过1GB。
+
 * demo程序
 
 ```python
 public_key = ''         #账户公钥
 private_key = ''        #账户私钥
 
-public_bucket = ''      #公共空间名称
-private_bucket = ''     #私有空间名称
+bucket = ''      		#空间名称
 local_file = ''         #本地文件名
 post_key = ''           #上传文件在空间中的名称
 
@@ -262,12 +261,8 @@ from ufile import filemanager
 
 postufile_handler = filemanager.FileManager(public_key, private_key)
 
-# 表单上传至公共空间
-ret, resp = postufile_handler.postfile(public_bucket, post_key, local_file)
-assert resp.status_code == 200
-
-# 表单上传至私有空间
-ret, resp = postufile_handler.postfile(private_bucket, post_key, local_file)
+# 表单上传文件至空间
+ret, resp = postufile_handler.postfile(bucket, post_key, local_file)
 assert resp.status_code == 200
 ```
 
@@ -282,13 +277,16 @@ assert resp.status_code == 200
 
 ### 秒传
 
+* 说明
+  先判断待上传文件的hash值，如果US3中可以查到此文件，则不必再传文件本身。
+
 * demo程序
 
 ```python
 public_key = ''         #账户公钥
 private_key = ''        #账户私钥
 
-public_bucket = ''      #公共空间名称
+bucket = ''      		#公共空间名称
 existkey = ''           #添加上传文件在空间中的名称
 nonexistkey = ''        #添加上传文件在空间中的名称
 existfile = ''          #本地文件名(空间存在该文件)
@@ -299,11 +297,11 @@ from ufile import filemanager
 uploadhitufile_handler = filemanager.FileManager(public_key, private_key)
 
 # 秒传已存在文件
-ret, resp = uploadhitufile_handler.uploadhit(public_bucket, existkey, existfile)
+ret, resp = uploadhitufile_handler.uploadhit(bucket, existkey, existfile)
 assert resp.status_code == 200
 
 # 秒传不存在文件
-ret, resp = uploadhitufile_handler.uploadhit(public_bucket, nonexistkey, nonexistfile)
+ret, resp = uploadhitufile_handler.uploadhit(bucket, nonexistkey, nonexistfile)
 assert resp.status_code == 404
 ```
 
@@ -319,13 +317,19 @@ assert resp.status_code == 404
 
 ### 分片上传和断点续传
 
+* 说明
+  将要上传的文件分成多个数据块（US3 里又称之为 Part）来分别上传，上传完成之后再调将这些 Part 组合成一个 Object 来达到断点续传的效果。
+* 适用场景
+  1. 大文件（大于1GB）的上传。
+  2. 恶劣的网络环境：如果上传的过程中出现了网络错误，可以从失败的Part进行续传。其他上传方式则需要从文件起始位置上传。
+  3. 流式上传：可以在需要上传的文件大小还不确定的情况下开始上传。这种场景在视频监控等行业应用中比较常见。
 * demo程序
 
 ```python
 public_key = ''         #账户公钥
 private_key = ''        #账户私钥
 
-public_bucket = ''      #公共空间名称
+bucket = ''      		#公共空间名称
 sharding_key = ''       #上传文件在空间中的名称
 local_file = ''         #本地文件名
 
@@ -334,26 +338,26 @@ from ufile import multipartuploadufile
 multipartuploadufile_handler = multipartuploadufile.MultipartUploadUFile(public_key, private_key)
 
 # 分片上传一个全新的文件
-ret, resp = multipartuploadufile_handler.uploadfile(public_bucket, sharding_key, local_file)
+ret, resp = multipartuploadufile_handler.uploadfile(bucket, sharding_key, local_file)
 while True:
-    if resp.status_code == 200: # 分片上传成功
+    if resp.status_code == 200: 	# 分片上传成功
         break
     elif resp.status_code == -1:    # 网络连接问题，续传
         ret, resp = multipartuploadufile_handler.resumeuploadfile()
-    else:   # 服务或者客户端错误
+    else:   						# 服务或者客户端错误
         print(resp.error)
         break
 
 # 分片上传一个全新的二进制数据流
 from io import BytesIO
 bio = BytesIO(u'你好'.encode('utf-8'))
-ret, resp = multipartuploadufile_handler.uploadstream(public_bucket, sharding_key, bio)
+ret, resp = multipartuploadufile_handler.uploadstream(bucket, sharding_key, bio)
 while True:
     if resp.status_code == 200:     # 分片上传成功
         break
     elif resp.status_code == -1:    # 网络连接问题，续传
         ret, resp = multipartuploadufile_handler.resumeuploadstream()
-    else:   # 服务器或者客户端错误
+    else:   						# 服务器或者客户端错误
         print(resp.error)
         break
 ```
@@ -369,6 +373,8 @@ while True:
 
 ### 文件下载
 
+* 说明
+  下载UFile文件并且保存为本地文件，可以从 Object 指定的位置开始下载，在下载大的 Object 的时候，可以分多次下载。
 * demo程序
 
 ```python
@@ -414,26 +420,23 @@ assert resp.status_code == 206
 
 ### 删除文件
 
+* 说明
+  删除存储空间（Bucket）中的文件。
 * demo程序
 
 ```python
 public_key = ''                 #账户公钥
 private_key = ''                #账户私钥
 
-public_bucket = ''              #公共空间名称
-private_bucekt = ''             #私有空间名称
+bucket = ''                     #空间名称
 delete_key = ''                 #文件在空间中的名称
 
 from ufile import filemanager
 
 deleteufile_handler = filemanager.FileManager(public_key, private_key)
 
-# 删除公共空间的文件
-ret, resp = deleteufile_handler.deletefile(public_bucket, delete_key)
-assert resp.status_code == 204
-
-# 删除私有空间的文件
-ret, resp = deleteufile_handler.deletefile(private_bucket, delete_key)
+# 删除空间的文件
+ret, resp = deleteufile_handler.deletefile(bucket, delete_key)
 assert resp.status_code == 204
 ```
 
@@ -447,13 +450,15 @@ assert resp.status_code == 204
 
 ### 解冻
 
+* 说明
+  用于解冻归档类型的文件。
 * demo 程序
 
 ```python
 public_key = ''                 #账户公钥
 private_key = ''                #账户私钥
 
-public_bucket = ''              #公共空间名称
+bucket = ''              		#空间名称
 local_file = ''                 #本地文件名
 put_key = ''                    #上传文件在空间中的名称
 ARCHIVE = 'ARCHIVE'             #冷存文件类型
@@ -466,11 +471,11 @@ restorefile_handler = filemanager.FileManager(public_key, private_key)
 # 普通上传归档类型的文件至公共空间
 header = dict()
 header['X-Ufile-Storage-Class'] = ARCHIVE
-ret, resp = putufile_handler.putfile(public_bucket, put_key, local_file,  header=header)
+ret, resp = putufile_handler.putfile(bucket, put_key, local_file,  header=header)
 assert resp.status_code == 200
 
 # 解冻归档类型的文件
-ret, resp = restorefile_handler.restore_file(public_bucket, put_key)
+ret, resp = restorefile_handler.restore_file(bucket, put_key)
 assert resp.status_code == 200
 ```
 
@@ -485,13 +490,15 @@ assert resp.status_code == 200
 
 ### 文件类型转换
 
+* 说明
+  用于转换文件的存储类型，可以任意转换文件为标准、低频、冷存三种存储类型。注意：冷存文件如果想转换为其他两种类型必须在解冻期内。
 * demo 程序
 
 ```python
 public_key = ''                 #账户公钥
 private_key = ''                #账户私钥
 
-public_bucket = ''              #公共空间名称
+bucket = ''              		#空间名称
 local_file = ''                 #本地文件名
 put_key = ''                    #上传文件在空间中的名称
 STANDARD = 'STANDARD'           #标准文件类型
@@ -502,14 +509,14 @@ from ufile import filemanager
 putufile_handler = filemanager.FileManager(public_key, private_key)
 classswitch_handler = filemanager.FileManager(public_key, private_key)
 
-# 普通上传文件至公共空间
+# 普通上传文件至空间
 header = dict()
 header['X-Ufile-Storage-Class'] = STANDARD
-ret, resp = putufile_handler.putfile(public_bucket, put_key, local_file, header=header)
+ret, resp = putufile_handler.putfile(bucket, put_key, local_file, header=header)
 assert resp.status_code == 200
 
 # 标准文件类型转换为低频文件类型
-ret, resp = classswitch_handler.class_switch_file(public_bucket, put_key, IA)
+ret, resp = classswitch_handler.class_switch_file(bucket, put_key, IA)
 assert resp.status_code == 200
 ```
 
@@ -524,18 +531,22 @@ assert resp.status_code == 200
 
 ### 比较本地文件和远程文件etag
 
+* 说明
+  判断文件的完整性，用于判断文件上传、下载过程中是否发生丢失。
+* demo 程序
+
 ```python
 from ufile import filemanager
 
 public_key = ''                 #账户公钥
 private_key = ''                #账户私钥
 
-public_bucket = ''              #添加公共空间名称
+bucket = ''              		#添加空间名称
 put_key = ''                    #添加远程文件key
 local_file=''                   #添加本地文件路径
 
 compare_handler = filemanager.FileManager(public_key, private_key)
-result=compare_handler.compare_file_etag(public_bucket,put_key,local_file)
+result=compare_handler.compare_file_etag(bucket,put_key,local_file)
 if result==True:
     print('etag are the same!')
 else:
@@ -544,11 +555,15 @@ else:
 
 ### 获取文件列表
 
+* 说明
+  获取存储空间（Bucket）中指定文件前缀的文件列表。
+* demo 程序
+
 ```python
 public_key = ''                 #账户公钥
 private_key = ''                #账户私钥
 
-bucket = ''                     #添加空间名称
+bucket = ''                     #空间名称
 
 from ufile import filemanager
 
@@ -565,11 +580,15 @@ for object in ret["DataSet"]:
 
 ### 获取目录文件列表
 
+* 说明
+  获取存储空间（Bucket）中指定目录下的文件列表。
+* demo 程序
+
 ```python
 public_key = ''                 #账户公钥
 private_key = ''                #账户私钥
 
-bucket = ''                     #添加空间名称
+bucket = ''                     #空间名称
 
 from ufile import filemanager
 
@@ -578,7 +597,7 @@ listobjects_hander = filemanager.FileManager(public_key, private_key)
 prefix=''     #以prefix作为前缀的目录文件列表
 maxkeys=100   #指定返回目录文件列表的最大数量
 marker=''     #返回以字母排序后，大于marker的目录文件列表
-delimiter='/' #delimiter是目录分隔符，当前只"/"和" "，当Delimiter设置为"/"时，返回目录形式的文件列表，当delimiter设置为" "时，返回非目录层级文件列表
+delimiter='/' #delimiter是目录分隔符，当前只"/"和""，当Delimiter设置为"/"且prefiex以"/"结尾时，返回prefix目录下的子文件（不包含目录文件），当delimiter设置为""时，返回以prefix作为前缀的文件
 
 ret, resp = listobjects_hander.listobjects(bucket, prefix=prefix, maxkeys=maxkeys, marker=marker, delimiter=delimiter)
 assert resp.status_code == 200
@@ -586,12 +605,14 @@ assert resp.status_code == 200
 
 ### 拷贝
 
+* 说明
+  跨存储空间（Bucket）复制文件。
 * demo 程序
 
 ```python
 public_key = ''                 #账户公钥
 private_key = ''                #账户私钥
-public_bucket = ''              #公共空间名称
+bucket = ''                     #公共空间名称
 key = ''                        #目的文件在空间中的名称
 srcbucket = ''                  #源文件所在空间名称
 srckey = ''                     #源文件名称
@@ -601,7 +622,7 @@ from ufile import filemanager
 copyufile_handler = filemanager.FileManager(public_key, private_key)
 
 # 拷贝文件
-ret, resp = copyufile_handler.copy(public_bucket, key, srcbucket, srckey)
+ret, resp = copyufile_handler.copy(bucket, key, srcbucket, srckey)
 assert resp.status_code == 200
 ```
 
@@ -616,13 +637,15 @@ assert resp.status_code == 200
 
 ### 重命名
 
+* 说明
+  重命名存储空间（Bucket）中的文件。
 * demo 程序
 
 ```python
 public_key = ''                 #账户公钥
 private_key = ''                #账户私钥
 
-public_bucket = ''              #公共空间名称
+bucket = ''              		#公共空间名称
 key = ''                        #源文件在空间中的名称
 newkey = ''                     #目的文件在空间中的名称
 
@@ -631,7 +654,7 @@ from ufile import filemanager
 renameufile_handler = filemanager.FileManager(public_key, private_key)
 
 # 重命名文件
-ret, resp = renameufile_handler.rename(public_bucket, key, newkey, 'true')
+ret, resp = renameufile_handler.rename(bucket, key, newkey, 'true')
 assert resp.status_code == 200
 ```
 
@@ -644,3 +667,12 @@ assert resp.status_code == 200
 | 403    | API公私钥错误  |
 | 401    | 上传凭证错误   |
 | 406    | 新文件名已存在 |
+
+# 版本记录
+
+[UFileSDK release history](https://github.com/ucloud/ufile-sdk-python/blob/master/CHANGELOG/CHANGELOG-3.2.md)
+
+# 联系我们
+
+- [UCloud官方网站: https://www.ucloud.cn/](https://www.ucloud.cn/)
+- 如有任何问题，欢迎提交[issue](https://github.com/ucloud/ufile-sdk-python/issues)或联系我们的技术支持，我们会第一时间解决问题。

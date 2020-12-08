@@ -22,8 +22,9 @@ Table of Contents
          * [秒传](#秒传)
          * [分片上传和断点续传](#分片上传和断点续传)
          * [文件下载](#文件下载)
+         * [查询文件基本信息](#查询文件基本信息)
          * [删除文件](#删除文件)
-         * [解冻](#解冻)
+         * [解冻归档文件](#解冻归档文件)
          * [文件类型转换](#文件类型转换)
          * [比较本地文件和远程文件etag](#比较本地文件和远程文件etag)
          * [获取文件列表](#获取文件列表)
@@ -47,6 +48,8 @@ UFILE-SDK-PYTHON
 ├─test_ufile         测试文件存放目录
 ├─ufile              SDK的具体实现
 ```
+
+[回到目录](#table-of-contents)
 
 # 安装
 
@@ -86,6 +89,8 @@ $ pip uninstall ufile
 
 docs文件夹包含基于sphinx的开发文档生成文件，在此文件夹下可通过运行make html命令可生成build目录，build/html目录即为开发文档。
 
+[回到目录](#table-of-contents)
+
 # 快速使用
 
 ```python
@@ -110,7 +115,7 @@ assert resp.status_code == 200
 _, resp = ufile_handler.download_file(bucket, put_key, save_file)
 assert resp.status_code == 200
 
-# 遍历空间里所有文件
+# 遍历空间里文件(默认数目为20)
 ret, resp = ufile_handler.getfilelist(bucket)
 assert resp.status_code == 200
 for object in ret["DataSet"]:
@@ -120,6 +125,7 @@ for object in ret["DataSet"]:
 ret, resp = ufile_handler.deletefile(bucket, put_key)
 assert resp.status_code == 204
 ```
+[回到目录](#table-of-contents)
 
 # 参数设置
 
@@ -163,6 +169,8 @@ locallogname = '' #完整本地日志文件名
 logger.set_log_file(locallogname)
 ```
 
+[回到目录](#table-of-contents)
+
 # 示例代码
 
 ## 存储空间管理
@@ -201,6 +209,8 @@ print(ret)
 bucketname = '' # 待更改的私有空间名称
 bucketmanager_handler.updatebucket(bucketname, 'public')
 ```
+
+[回到目录](#table-of-contents)
 
 ## 文件（即对象）管理
 
@@ -244,6 +254,8 @@ ret, resp = putufile_handler.putstream(bucket, stream_key, bio)
 | 403    | API公私钥错误        |
 | 401    | 上传凭证错误         |
 
+[回到目录](#table-of-contents)
+
 ### 表单上传
 
 * 说明
@@ -276,6 +288,8 @@ assert resp.status_code == 200
 | 400    | 上传到不存在的空间   |
 | 403    | API公私钥错误        |
 | 401    | 上传凭证错误         |
+
+[回到目录](#table-of-contents)
 
 ### 秒传
 
@@ -317,6 +331,8 @@ assert resp.status_code == 404
 | 401    | 上传凭证错误       |
 | 404    | 文件秒传失败       |
 
+[回到目录](#table-of-contents)
+
 ### 分片上传和断点续传
 
 * 说明
@@ -324,7 +340,6 @@ assert resp.status_code == 404
 * 适用场景
   1. 大文件（大于1GB）的上传。
   2. 恶劣的网络环境：如果上传的过程中出现了网络错误，可以从失败的Part进行续传。其他上传方式则需要从文件起始位置上传。
-  3. 流式上传：可以在需要上传的文件大小还不确定的情况下开始上传。这种场景在视频监控等行业应用中比较常见。
 * demo程序
 
 ```python
@@ -372,6 +387,8 @@ while True:
 | 400    | 上传到不存在的空间   |
 | 403    | API公私钥错误        |
 | 401    | 上传凭证错误         |
+
+[回到目录](#table-of-contents)
 
 ### 文件下载
 
@@ -421,6 +438,43 @@ assert resp.status_code == 206
 | 404    | 下载文件或数据不存在     |
 | 416    | 文件范围请求不合法       |
 
+[回到目录](#table-of-contents)
+
+### 查询文件基本信息
+
+* 说明
+  * 查询文件基本信息：类型、长度、范围、在US3的哈希值。
+* demo程序
+
+```python
+public_key = ''                 #账户公钥
+private_key = ''                #账户私钥
+
+bucket = ''                     #空间名称
+head_key = ''                   #文件在空间中的名称
+
+from ufile import filemanager
+
+headfile_handler = filemanager.FileManager(public_key, private_key)
+
+# 查询文件基本信息
+ret, resp = headfile_handler.head_file(bucket, head_key)
+assert resp.status_code == 200
+print(resp)
+```
+
+* HTTP 返回状态码
+
+| 状态码 | 描述                 |
+| ------ | -------------------- |
+| 200    | 查询文件基本信息成功 |
+| 400    | 不存在的空间         |
+| 403    | API公私钥错误        |
+| 401    | 上传凭证错误         |
+| 404    | 文件不存在           |
+
+[回到目录](#table-of-contents)
+
 ### 删除文件
 
 * 说明
@@ -451,10 +505,13 @@ assert resp.status_code == 204
 | 403    | API公私钥错误        |
 | 401    | 签名错误             |
 
-### 解冻
+[回到目录](#table-of-contents)
+
+### 解冻归档文件
 
 * 说明
   * 用于解冻归档类型的文件。
+  * 解冻归档文件需要时间，所以归档文件解冻后不能立刻下载。因此如需下载归档文件，请在下载前使用[获取文件列表](#获取文件列表)获取文件状态，若其返回值RestoreStatus为'Restored'，则表示该归档文件已完成解冻。
 * demo 程序
 
 ```python
@@ -464,7 +521,7 @@ private_key = ''                #账户私钥
 bucket = ''                     #空间名称
 local_file = ''                 #本地文件名
 put_key = ''                    #上传文件在空间中的名称
-ARCHIVE = 'ARCHIVE'             #冷存文件类型
+ARCHIVE = 'ARCHIVE'             #归档文件类型
 
 from ufile import filemanager
 
@@ -487,15 +544,17 @@ assert resp.status_code == 200
 | 状态码 | 描述                           |
 | ------ | ------------------------------ |
 | 200    | 文件解冻成功                   |
-| 400    | 不存在的空间 或 文件类型非冷存 |
+| 400    | 不存在的空间 或 文件类型非归档 |
 | 403    | API公私钥错误                  |
 | 401    | 上传凭证错误                   |
+
+[回到目录](#table-of-contents)
 
 ### 文件类型转换
 
 * 说明
-  * 用于转换文件的存储类型，可以任意转换文件为标准、低频、冷存三种存储类型。
-  * 注意：冷存文件如果想转换为其他两种类型必须在解冻期内。
+  * 用于转换文件的存储类型，可以转换文件为标准、低频、归档三种存储类型。
+  * 注意：现在不支持低频转为标准以及归档转为标准、低频
 * demo 程序
 
 ```python
@@ -530,8 +589,10 @@ assert resp.status_code == 200
 | ------ | --------------------------------------------------- |
 | 200    | 文件转换类型成功                                    |
 | 400    | 不存在的空间                                        |
-| 403    | API公私钥错误 或 冷存文件尚未解冻不允许转换文件类型 |
+| 403    | API公私钥错误 或 归档文件尚未解冻不允许转换文件类型 |
 | 401    | 上传凭证错误                                        |
+
+[回到目录](#table-of-contents)
 
 ### 比较本地文件和远程文件etag
 
@@ -556,6 +617,8 @@ if result==True:
 else:
     print('etag are different!')
 ```
+
+[回到目录](#table-of-contents)
 
 ### 获取文件列表
 
@@ -582,6 +645,8 @@ for object in ret["DataSet"]:
     print(object)
 ```
 
+[回到目录](#table-of-contents)
+
 ### 获取目录文件列表
 
 * 说明
@@ -606,6 +671,8 @@ delimiter='/' #delimiter是目录分隔符，当前只"/"和""，当Delimiter设
 ret, resp = listobjects_hander.listobjects(bucket, prefix=prefix, maxkeys=maxkeys, marker=marker, delimiter=delimiter)
 assert resp.status_code == 200
 ```
+
+[回到目录](#table-of-contents)
 
 ### 拷贝
 
@@ -639,6 +706,8 @@ assert resp.status_code == 200
 | 403    | API公私钥错误 |
 | 401    | 上传凭证错误  |
 
+[回到目录](#table-of-contents)
+
 ### 重命名
 
 * 说明
@@ -652,13 +721,14 @@ private_key = ''                #账户私钥
 bucket = ''                     #空间名称
 key = ''                        #源文件在空间中的名称
 newkey = ''                     #目的文件在空间中的名称
+force = 'true'                  #string类型, 是否强行覆盖文件，值为'true'会覆盖，其他值则不会,默认值为'true'
 
 from ufile import filemanager
 
 renameufile_handler = filemanager.FileManager(public_key, private_key)
 
 # 重命名文件
-ret, resp = renameufile_handler.rename(bucket, key, newkey, 'true')
+ret, resp = renameufile_handler.rename(bucket, key, newkey, force)
 assert resp.status_code == 200
 ```
 
@@ -671,6 +741,8 @@ assert resp.status_code == 200
 | 403    | API公私钥错误  |
 | 401    | 上传凭证错误   |
 | 406    | 新文件名已存在 |
+
+[回到目录](#table-of-contents)
 
 # 版本记录
 

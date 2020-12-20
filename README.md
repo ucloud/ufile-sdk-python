@@ -27,9 +27,9 @@ Table of Contents
          * [解冻归档文件](#解冻归档文件)
          * [文件类型转换](#文件类型转换)
          * [比较本地文件和远程文件etag](#比较本地文件和远程文件etag)
-         * [获取文件列表](#获取文件列表)
+         * [前缀列表查询](#前缀列表查询)
          * [获取目录文件列表](#获取目录文件列表)
-         * [拷贝](#拷贝)
+         * [拷贝文件](#拷贝文件)
          * [重命名](#重命名)
    * [版本记录](#版本记录)
    * [联系我们](#联系我们)
@@ -75,9 +75,6 @@ $ pip install --pre ufile
 
 # 如果未安装pip
 # pip官网：https://pypi.org/project/pip/
-# 或者使用以下方法来安装：
-$ curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py   # 下载安装脚本
-$ sudo python get-pip.py    # 运行安装脚本 Python3则执行：sudo python3 get-pip.py 
 
 #卸载
 $ pip uninstall ufile
@@ -87,7 +84,9 @@ $ pip uninstall ufile
 
 ## 开发文档生成
 
-docs文件夹包含基于sphinx的开发文档生成文件，在此文件夹下可通过运行make html命令可生成build目录，build/html目录即为开发文档。
+源码中的docs文件夹包含基于sphinx的开发文档生成文件，下载相应的SDK包后，进入此文件夹，然后执行命令`make html`命令可生成build目录，build/html目录即为开发文档。
+
+注：Windows下可使用`.\make.bat html`命令生成build目录
 
 [回到目录](#table-of-contents)
 
@@ -103,7 +102,13 @@ local_file = ''              #本地文件名
 put_key = ''                 #上传文件在空间中的名称
 save_file = ''               #下载文件保存的文件名
 
-from ufile import filemanager
+from ufile import config,filemanager
+
+#以下两项如果不设置，则默认设为'.cn-bj.ufileos.com'，如果上传、下载文件的bucket所在地域不在北京，请务必设置以下两项。
+#设置上传host后缀,外网可用后缀形如 .cn-bj.ufileos.com（cn-bj为北京地区，其他地区具体后缀可见控制台：对象存储-单地域空间管理-存储空间域名）
+config.set_default(uploadsuffix='YOUR_UPLOAD_SUFFIX')
+#设置下载host后缀，普通下载后缀即上传后缀，CDN下载后缀为 .ufile.ucloud.com.cn
+config.set_default(downloadsuffix='YOUR_DOWNLOAD_SUFFIX')
 
 ufile_handler = filemanager.FileManager(public_key, private_key)
 
@@ -138,8 +143,8 @@ private_key = ''        #私钥或token
 ```
 
 * 密钥可以在控制台中 [API 产品 - API 密钥](https://console.ucloud.cn/uapi/apikey)，点击显示 API 密钥获取。将 public_key 和 private_key 分别赋值给相关变量后，SDK即可通过此密钥完成鉴权。请妥善保管好 API 密钥，避免泄露。
-
 * token（令牌）是针对指定bucket授权的一对公私钥。可通过token进行授权bucket的权限控制和管理。可以在控制台中[对象存储US3-令牌管理](https://console.ucloud.cn/ufile/token)，点击创建令牌获取。
+* 管理 bucket 创建和删除必须要公私钥，如果只做文件上传和下载用 TOEKN 就够了，为了安全，强烈建议只使用 TOKEN 做文件管理
 
 ## 设置默认参数
 
@@ -147,6 +152,7 @@ private_key = ''        #私钥或token
 from ufile import config
 
 #设置上传host后缀,外网可用后缀形如 .cn-bj.ufileos.com（cn-bj为北京地区，其他地区具体后缀可见控制台：对象存储-单地域空间管理-存储空间域名）
+#默认值为'.cn-bj.ufileos.com'，如果上传文件的bucket所在地域不在北京，请务必设置此项
 config.set_default(uploadsuffix='YOUR_UPLOAD_SUFFIX')
 #设置下载host后缀，普通下载后缀即上传后缀，CDN下载后缀为 .ufile.ucloud.com.cn
 config.set_default(downloadsuffix='YOUR_DOWNLOAD_SUFFIX')
@@ -154,7 +160,7 @@ config.set_default(downloadsuffix='YOUR_DOWNLOAD_SUFFIX')
 config.set_default(connection_timeout=60)
 #设置私有bucket下载链接有效期,单位为秒
 config.set_default(expires=60)
-#设置上传文件是否校验md5
+#设置上传文件是否进行数据完整性校验（现仅支持putifle和putstream）
 config.set_default(md5=True)
 ```
 
@@ -190,10 +196,10 @@ from ufile import bucketmanager
 bucketmanager_handler = bucketmanager.BucketManager(public_key, private_key)
 
 # 创建新的bucket
-bucketname = '' #创建的空间名称
-region = 'cn-bj'#空间所在的地理区域
+bucketname = '' #创建的空间名称,命名规范参见https://docs.ucloud.cn/api/ufile-api/create_bucket
+region = 'cn-bj'#空间所在的地理区域，详细信息见https://docs.ucloud.cn/ufile/introduction/region
 ret, resp = bucketmanager_handler.createbucket(bucketname, region,'public')
-assert resp.status_code == 200
+print(ret)
 
 # 删除bucket
 bucketname = '' #待删除的空间名称
@@ -207,7 +213,8 @@ print(ret)
 
 # 更改bucket属性
 bucketname = '' # 待更改的私有空间名称
-bucketmanager_handler.updatebucket(bucketname, 'public')
+ret, resp = bucketmanager_handler.updatebucket(bucketname, 'public')
+print(ret)
 ```
 
 [回到目录](#table-of-contents)
@@ -243,6 +250,15 @@ from io import BytesIO
 bio = BytesIO(u'Do be a good man'.encode('utf-8'))  #二进制数据流
 stream_key = ''                                     #上传数据流在空间中的名称
 ret, resp = putufile_handler.putstream(bucket, stream_key, bio)
+assert resp.status_code == 200
+
+# 普通上传文件到所在region为上海二的空间
+SH2_bucket = ''
+SH2_UPLOAD_SUFFIX = '.cn-sh2.ufileos.com'
+
+filemgr_sh = filemanager.FileManager(public_key, private_key, upload_suffix=SH2_UPLOAD_SUFFIX)
+ret, resp = filemgr_sh.putfile(SH2_bucket , put_key, local_file, header=None)
+assert resp.status_code == 200
 ```
 
 * HTTP 返回状态码
@@ -424,6 +440,16 @@ assert resp.status_code == 200
 # 下载包含文件范围请求的文件
 ret, resp = downloadufile_handler.download_file(public_bucket, put_key, range_savefile, isprivate=False, expires=300, content_range=(0, 15))
 assert resp.status_code == 206
+
+# 从所在region为上海二的私有空间下载文件
+SH2_bucket = ''
+SH2_put_key = ''
+SH2_private_savefile = ''
+SH2_DOWNLOAD_SUFFIX = '.cn-sh2.ufileos.com'
+
+filemgr_sh = filemanager.FileManager(public_key, private_key, download_suffix=SH2_DOWNLOAD_SUFFIX )
+ret, resp = filemgr_sh.download_file(SH2_bucket, SH2_put_key, SH2_private_savefile)
+assert resp.status_code == 200
 ```
 
 * HTTP 返回状态码
@@ -511,7 +537,8 @@ assert resp.status_code == 204
 
 * 说明
   * 用于解冻归档类型的文件。
-  * 解冻归档文件需要时间，所以归档文件解冻后不能立刻下载。因此如需下载归档文件，请在下载前使用[获取文件列表](#获取文件列表)获取文件状态，若其返回值RestoreStatus为'Restored'，则表示该归档文件已完成解冻。
+  * 解冻归档文件需要时间，一般在10s以内，所以归档文件解冻后不能立刻下载。
+  * 如需下载归档文件，请在下载前使用[前缀列表查询](#前缀列表查询)获取文件状态，若其返回值RestoreStatus为'Restored'，则表示该归档文件已完成解冻。
 * demo 程序
 
 ```python
@@ -537,6 +564,14 @@ assert resp.status_code == 200
 # 解冻归档类型的文件
 ret, resp = restorefile_handler.restore_file(bucket, put_key)
 assert resp.status_code == 200
+
+# 文件解冻一般在10s以内
+time.sleep(10)
+
+# 查看归档文件解冻状态
+ret, resp = restorefile_handler.getfilelist(bucket, put_key)
+assert resp.status_code == 200
+print(ret['DataSet'][0]['RestoreStatus'])#'Frozen'说明解冻还未完成，'Restored'说明解冻成功
 ```
 
 * HTTP 返回状态码
@@ -620,7 +655,7 @@ else:
 
 [回到目录](#table-of-contents)
 
-### 获取文件列表
+### 前缀列表查询
 
 * 说明
   * 获取存储空间（Bucket）中指定文件前缀的文件列表。
@@ -638,11 +673,23 @@ getfilelist_hander = filemanager.FileManager(public_key, private_key)
 
 prefix='' #文件前缀
 limit=10  #文件列表数目
-marker='' #文件列表起始位置
+marker='' #返回以字母排序后，大于marker的文件列表
 ret, resp = getfilelist_hander.getfilelist(bucket, prefix=prefix, limit=limit, marker=marker)
 assert resp.status_code == 200
 for object in ret["DataSet"]:
     print(object)
+    
+# 根据返回值'NextMarker'循环遍历获得所有结果（若一次查询无法获得所有结果）
+while True:
+    ret, resp = getfilelist_hander.getfilelist(bucket, prefix=prefix, limit=limit, marker=marker)
+    assert resp.status_code == 200
+
+    for object in ret["DataSet"]:#
+        print(object)
+
+    marker = ret['NextMarker']
+    if  len(marker) <= 0 or len(ret['DataSet']) < limit:
+        break
 ```
 
 [回到目录](#table-of-contents)
@@ -651,6 +698,7 @@ for object in ret["DataSet"]:
 
 * 说明
   * 获取存储空间（Bucket）中指定目录下的文件列表。
+  * **注意**：目前该接口只有**北京、上海、广州、台北、首尔**地域支持。
 * demo 程序
 
 ```python
@@ -664,20 +712,45 @@ from ufile import filemanager
 listobjects_hander = filemanager.FileManager(public_key, private_key)
 
 prefix=''     #以prefix作为前缀的目录文件列表
-maxkeys=100   #指定返回目录文件列表的最大数量
+maxkeys=100   #指定返回目录文件列表的最大数量，默认值为100，不超过1000
 marker=''     #返回以字母排序后，大于marker的目录文件列表
-delimiter='/' #delimiter是目录分隔符，当前只"/"和""，当Delimiter设置为"/"且prefiex以"/"结尾时，返回prefix目录下的子文件（不包含目录文件），当delimiter设置为""时，返回以prefix作为前缀的文件
+delimiter='/' #delimiter是目录分隔符，当前只支持"/"和""，当Delimiter设置为"/"且prefiex以"/"结尾时，返回prefix目录下的子文件，当delimiter设置为""时，返回以prefix作为前缀的文件
 
 ret, resp = listobjects_hander.listobjects(bucket, prefix=prefix, maxkeys=maxkeys, marker=marker, delimiter=delimiter)
 assert resp.status_code == 200
+
+for object in ret['Contents']:#子文件列表
+    print(object)
+
+for object in ret['CommonPrefixes']:#子目录列表
+    print(object)
+
+# 根据返回值'NextMarker'循环遍历获得所有结果（若一次查询无法获得所有结果）
+while True:
+    ret, resp = listobjects_hander.listobjects(bucket, prefix=prefix, maxkeys=maxkeys, marker=marker, delimiter=delimiter)
+    assert resp.status_code == 200
+
+    for object in ret['Contents']:#子文件列表
+        print(object)
+
+    for object in ret['CommonPrefixes']:#子目录列表
+        print(object)
+    
+    marker = ret['NextMarker']
+    if  len(marker) <= 0 or len(ret['Contents'])+len(ret['CommonPrefixes']) < maxkeys:
+        break
 ```
 
 [回到目录](#table-of-contents)
 
-### 拷贝
+### 拷贝文件
 
 * 说明
-  * 跨存储空间（Bucket）复制文件。
+  
+  * 跨存储空间（Bucket）拷贝文件。
+  * 若当前Bucket已有key为dstKeyName的文件，则该操作会默认覆盖该文件，请谨慎操作。可先通过[head_file](#查询文件基本信息)进行判断。
+  * 目前文件拷贝的srcBucketName可以是同一账号相同地域下不同子账号的任意Bucket
+  
 * demo 程序
 
 ```python
@@ -708,7 +781,7 @@ assert resp.status_code == 200
 
 [回到目录](#table-of-contents)
 
-### 重命名
+### 重命名文件
 
 * 说明
   * 重命名存储空间（Bucket）中的文件。
@@ -750,5 +823,8 @@ assert resp.status_code == 200
 
 # 联系我们
 
-- [UCloud官方网站: https://www.ucloud.cn/](https://www.ucloud.cn/)
-- 如有任何问题，欢迎提交[issue](https://github.com/ucloud/ufile-sdk-python/issues)或联系我们的技术支持，我们会第一时间解决问题。
+- UCloud US3 [UCloud官方网站](https://www.ucloud.cn/)
+- UCloud US3[官方文档中心](https://docs.ucloud.cn/ufile/README)
+- UCloud 官方技术支持：[提交工单](https://accountv2.ucloud.cn/work_ticket/create)
+- 提交[issue](https://github.com/ucloud/ufile-sdk-python/issues)
+

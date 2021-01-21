@@ -1,29 +1,34 @@
-from common import *
-from ufile import config, multipartuploadufile
+public_key = ''         #账户公钥
+private_key = ''        #账户私钥
 
-# 运行时, 请自行修改
-BUCKET_BJ = 'lovecrazy-private'
-BJ_UPLOAD_SUFFIX = '.cn-bj.ufileos.com'
+bucket = ''             #空间名称
+sharding_key = ''       #上传文件在空间中的名称
+local_file = ''         #本地文件名
 
-BUCKET_SH2 = 'lovecrazy'
-SH2_UPLOAD_SUFFIX = '.cn-sh2.ufileos.com'
+from ufile import multipartuploadufile
 
-# 待上传文件路径，最好填绝对路径
-UPLOAD_FILE_PATH = './example.jpg'
+multipartuploadufile_handler = multipartuploadufile.MultipartUploadUFile(public_key, private_key)
 
-# 设置默认参数
-config.set_default(uploadsuffix=BJ_UPLOAD_SUFFIX)
-config.set_default(downloadsuffix=BJ_UPLOAD_SUFFIX)
-config.set_default(connection_timeout=60)
-config.set_default(expires=60)
-config.set_default(md5=True)
+# 分片上传一个全新的文件
+ret, resp = multipartuploadufile_handler.uploadfile(bucket, sharding_key, local_file)
+while True:
+    if resp.status_code == 200:     # 分片上传成功
+        break
+    elif resp.status_code == -1:    # 网络连接问题，续传
+        ret, resp = multipartuploadufile_handler.resumeuploadfile()
+    else:                           # 服务或者客户端错误
+        print(resp.error)
+        break
 
-# 上传到北京的bucket
-mup_bj = multipartuploadufile.MultipartUploadUFile(PUBLIC_KEY, PRIVATE_KEY)
-_, resp = mup_bj.uploadfile(BUCKET_BJ, 'python-sdk/examples/multipartput-key', UPLOAD_FILE_PATH)
-assert resp.status_code == 200
-
-# 上传到上海的bucket
-mup_sh = multipartuploadufile.MultipartUploadUFile(PUBLIC_KEY, PRIVATE_KEY, upload_suffix=SH2_UPLOAD_SUFFIX)
-_, resp = mup_sh.uploadfile(BUCKET_SH2, 'python-sdk/examples/multipartput-key', UPLOAD_FILE_PATH)
-assert resp.status_code == 200
+# 分片上传一个全新的二进制数据流
+from io import BytesIO
+bio = BytesIO(u'你好'.encode('utf-8'))
+ret, resp = multipartuploadufile_handler.uploadstream(bucket, sharding_key, bio)
+while True:
+    if resp.status_code == 200:     # 分片上传成功
+        break
+    elif resp.status_code == -1:    # 网络连接问题，续传
+        ret, resp = multipartuploadufile_handler.resumeuploadstream()
+    else:                           # 服务器或者客户端错误
+        print(resp.error)
+        break

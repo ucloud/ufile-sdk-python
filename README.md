@@ -1,7 +1,5 @@
 # UCloud 对象存储 Python-SDK
 
-> [US3文档中心 Python-SDK](https://ucloud-us3.github.io/python-sdk/%E6%A6%82%E8%BF%B0.html)
-
 Table of Contents
 =================
 
@@ -826,7 +824,8 @@ assert resp.status_code == 200
 # 联系我们
 
 - UCloud US3 [UCloud官方网站](https://www.ucloud.cn/)
-- UCloud US3[官方文档中心](https://docs.ucloud.cn/ufile/README)
+- UCloud US3 [官方文档中心](https://docs.ucloud.cn/ufile/README)
+- UCloud US3 [开发者文档](https://ucloud-us3.github.io/python-sdk/概述.html)
 - UCloud 官方技术支持：[提交工单](https://accountv2.ucloud.cn/work_ticket/create)
 - 提交[issue](https://github.com/ucloud/ufile-sdk-python/issues)
 

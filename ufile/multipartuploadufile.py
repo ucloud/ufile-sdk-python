@@ -71,7 +71,6 @@ class MultipartUploadUFile(BaseUFile):
 
         self.__threaddict = {}                      #线程字典，用于保证finish前等待运行中的uploadpart线程
         self.__errresp =  None                      #用于主函数返回的errresp
-        self.__threadlock =  threading.Lock()       #修改errresp时的锁
 
         if self.__header is None:
             self.__header = dict()
@@ -86,9 +85,6 @@ class MultipartUploadUFile(BaseUFile):
             self.uploadid = ret.get('UploadId')
             self.blocksize = ret.get('BlkSize')
             logger.info('multipart upload id: {0}'.format(self.uploadid))
-            
-            resp.status_code = -1           
-            return ret, resp
         else:
             logger.error('multipart upload init failed. error message: {0}'.format(resp.error))
             return ret, resp
@@ -213,7 +209,7 @@ class MultipartUploadUFile(BaseUFile):
         logger.info('start finish sharding request')
         return _finishsharding(url, params, self.__header, data)
 
-    @deprecated("")
+    @deprecated("Deprecated since version 3.2.6")
     def resumeuploadfile(self, retrycount=3, retryinterval=5, bucket=None, key=None, uploadid=None, blocksize=None, etaglist=None, localfile=None, pausepartnumber=None, mime_type=None, header=None):
         """
         断点续传失败的本地文件分片
@@ -355,8 +351,7 @@ class MultipartUploadUFile(BaseUFile):
 
         if not resp.ok():
             logger.error('upload sharding {0} failed. uploadid: {1}'.format(part_number, uploadid))
-            with self.__threadlock:
-                    self.__errresp = resp
+            self.__errresp = resp
         else:
             logger.info('upload sharding {0} succeed.etag:{1}, uploadid: {2}'.format(part_number, resp.etag, uploadid))
             etaglist[part_number] = resp.etag

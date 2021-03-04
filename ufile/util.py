@@ -273,7 +273,7 @@ def ufile_listobjects_url(bucket, upload_suffix=None):
 def deprecated(message):
   def deprecated_decorator(func):
       def deprecated_func(*args, **kwargs):
-          warnings.warn("{} is a deprecated function. {}".format(func.__name__, message),
+          warnings.warn("Call to deprecated function {} . -- {}".format(func.__name__, message),
                         category=DeprecationWarning,
                         stacklevel=2)
           warnings.simplefilter('default', DeprecationWarning)

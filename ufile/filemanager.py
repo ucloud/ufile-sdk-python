@@ -13,6 +13,7 @@ from .compact import b, s, u, url_parse
 from . import config
 from .config import BLOCKSIZE
 import string
+from urllib import parse
 
 
 class FileManager(BaseUFile):
@@ -508,6 +509,7 @@ class FileManager(BaseUFile):
             header['User-Agent'] = config.get_default('user_agent')
 
         # update request header
+        srckey = parse.quote(srckey)
         header['X-Ufile-Copy-Source'] = "/" + srcbucket + "/" + srckey
         header['Content-Length'] = str(0)
         authorization = self.authorization('put', bucket, key, header)

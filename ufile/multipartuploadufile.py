@@ -4,7 +4,7 @@
 import os
 import json
 from .baseufile import BaseUFile
-from .util import _check_dict, initialsharding_url, finishsharding_url, shardingupload_url, _file_iter, mimetype_from_file, mimetype_from_buffer
+from .util import _check_dict, initialsharding_url, finishsharding_url, shardingupload_url, _file_iter, mimetype_from_file, mimetype_from_buffer,deprecated
 from .httprequest import ResponseInfo, _initialsharding, _finishsharding, _shardingupload
 from .logger import logger
 from .compact import s
@@ -68,6 +68,10 @@ class MultipartUploadUFile(BaseUFile):
         self.__header = header
         self.__stream = stream
         self.pausepartnumber = 0
+
+        self.__threaddict = {}                      #线程字典，用于保证finish前等待运行中的uploadpart线程
+        self.__errresp =  None                      #用于主函数返回的errresp
+
         if self.__header is None:
             self.__header = dict()
         else:
@@ -82,7 +86,7 @@ class MultipartUploadUFile(BaseUFile):
             self.blocksize = ret.get('BlkSize')
             logger.info('multipart upload id: {0}'.format(self.uploadid))
         else:
-            logger.error('multipar upload init failed. error message: {0}'.format(resp.error))
+            logger.error('multipart upload init failed. error message: {0}'.format(resp.error))
             return ret, resp
 
         # mulitple sharding upload
@@ -100,20 +104,32 @@ class MultipartUploadUFile(BaseUFile):
         self.__header['Authorization'] = authorization
 
         sem=threading.Semaphore(maxthread)
+        partnumber = 0
         for data in _file_iter(self.__stream, self.blocksize):
+            sem.acquire()     #控制最大并发线程数
+            if self.__errresp:#如果有分片上传失败，停止后续分片上传
+                sem.release()
+                break
             self.etaglist.append("")
-            thread1 = threading.Thread(target=self.__partthread, args=(sem, self.__bucket, self.__key, self.uploadid, self.pausepartnumber, self.__header, data, retrycount, retryinterval, self.etaglist, self.__upload_suffix))
+            thread1 = threading.Thread(target=self.__partthread, args=(sem, self.__bucket, self.__key, self.uploadid, partnumber, self.__header, data, retrycount, retryinterval, self.etaglist, self.__upload_suffix))
+            self.__threaddict[partnumber] = thread1
             thread1.start()
-            thread1.join()
-            self.pausepartnumber += 1
+            partnumber += 1
+        
+        for thread in list(self.__threaddict.values()):#转为list是因为遍历字典时长度变化会报错
+            thread.join()
 
-        while threading.active_count()>1:
-            time.sleep(5)
+        if self.__errresp:
+            self.pausepartnumber = self.etaglist.index("")
+            logger.error('multipart upload failed. uploadid:{0}, pausepartnumber: {1}, key: {2} , error message{3}. FAIL!!!'.format(self.uploadid, self.pausepartnumber, self.__key,self.__errresp.error))
+            return None , self.__errresp
+        else:
+            self.pausepartnumber = len(self.etaglist)
 
         logger.info('start finish sharding request.')
         ret, resp = self.__finishupload()
         if not resp.ok():
-            logger.error('multipart upload failed. uploadid:{0}, pausepartnumber: {1}, key: {2} FAIL!!!'.format(self.uploadid, self.pausepartnumber, self.__key))
+            logger.error('multipart upload failed. uploadid:{0}, pausepartnumber: {1}, key: {2}, error message: {3}. FAIL!!!'.format(self.uploadid, self.pausepartnumber, self.__key,resp.error))
         else:
             logger.info('mulitpart upload succeed. uploadid: {0}, key: {1} SUCCEED'.format(self.uploadid, self.__key))
         return ret, resp
@@ -194,6 +210,7 @@ class MultipartUploadUFile(BaseUFile):
         logger.info('start finish sharding request')
         return _finishsharding(url, params, self.__header, data)
 
+    @deprecated("Deprecated since version 3.2.6")
     def resumeuploadfile(self, retrycount=3, retryinterval=5, bucket=None, key=None, uploadid=None, blocksize=None, etaglist=None, localfile=None, pausepartnumber=None, mime_type=None, header=None):
         """
         断点续传失败的本地文件分片
@@ -320,22 +337,24 @@ class MultipartUploadUFile(BaseUFile):
         return ret, resp
 
     def __partthread(self, sem, bucket, key, uploadid, part_number, header, data, retrycount, retryinterval, etaglist, upload_suffix=None):
-        with sem:
-            url = shardingupload_url(bucket, key, uploadid, part_number, upload_suffix=upload_suffix)
-            resp = None
-            for index in range(retrycount):
-                logger.info('try {0} time sharding upload sharding {1}'.format(index + 1, part_number))
-                logger.info('sharding url:{0}'.format(url))
-                _, resp = _shardingupload(url, data, header)
-                if not resp.ok():
-                    logger.error('failed {0} time when upload sharding {1}.error message: {2}, uploadid: {3}'.format(index + 1, part_number, resp.error, uploadid))
-                    if index < retrycount - 1:
-                        time.sleep(retryinterval)
-                else:
-                    break
-
+        url = shardingupload_url(bucket, key, uploadid, part_number, upload_suffix=upload_suffix)
+        resp = None
+        for index in range(retrycount):
+            logger.info('try {0} time sharding upload sharding {1}'.format(index + 1, part_number))
+            logger.info('sharding url:{0}'.format(url))
+            _, resp = _shardingupload(url, data, header)
             if not resp.ok():
-                logger.error('upload sharding {0} failed. uploadid: {1}'.format(part_number, uploadid))
-                exit("part upload failed!")
+                logger.error('failed {0} time when upload sharding {1}.error message: {2}, uploadid: {3}'.format(index + 1, part_number, resp.error, uploadid))
+                if index < retrycount - 1:
+                    time.sleep(retryinterval)
+            else:
+                break
+
+        if not resp.ok():
+            logger.error('upload sharding {0} failed. uploadid: {1}'.format(part_number, uploadid))
+            self.__errresp = resp
+        else:
             logger.info('upload sharding {0} succeed.etag:{1}, uploadid: {2}'.format(part_number, resp.etag, uploadid))
             etaglist[part_number] = resp.etag
+        self.__threaddict.pop(part_number)
+        sem.release()

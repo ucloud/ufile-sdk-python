@@ -5,3 +5,11 @@
 ## 3.2.5 (Jan 21, 2021)
     * [optimization] readme
     * [optimization] example
+## 3.2.6 (Mar 10, 2021)
+    * [optimization] readme
+    * [optimization] 分片上传支持异步并发多线程
+    * [optimization] file_etag函数size参数设置默认值
+    * [bug fix] 开启线程时使用分片上传会阻塞
+    * [bug fix] copy函数的srckey支持中文
+    * [bug fix] 修复上传.tar.gz文件的MIME-Type错误，增加util.py中_EXTRA_TYPES_MAP的内容
+    * [Deprecation] 废弃函数resumeuploadfile()

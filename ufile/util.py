@@ -11,6 +11,7 @@ import struct
 import mimetypes
 from os import path
 import warnings
+from .config import BLOCKSIZE 
 
 _EXTRA_TYPES_MAP = {
     ".js": "application/javascript",
@@ -325,7 +326,7 @@ def _file_iter(input_stream, size):
         d = input_stream.read(size)
 
 
-def file_etag(localfile, size):
+def file_etag(localfile, size=BLOCKSIZE):
     """
     计算本地文件的etag
 

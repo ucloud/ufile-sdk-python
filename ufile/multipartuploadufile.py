@@ -108,6 +108,7 @@ class MultipartUploadUFile(BaseUFile):
         for data in _file_iter(self.__stream, self.blocksize):
             sem.acquire()     #控制最大并发线程数
             if self.__errresp:#如果有分片上传失败，停止后续分片上传
+                sem.release()
                 break
             self.etaglist.append("")
             thread1 = threading.Thread(target=self.__partthread, args=(sem, self.__bucket, self.__key, self.uploadid, partnumber, self.__header, data, retrycount, retryinterval, self.etaglist, self.__upload_suffix))

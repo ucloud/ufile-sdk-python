@@ -13,7 +13,10 @@ from .compact import b, s, u, url_parse
 from . import config
 from .config import BLOCKSIZE
 import string
-from urllib import parse
+try:
+    from urllib.parse import urlparse
+except ImportError:
+     from urlparse import urlparse
 
 
 class FileManager(BaseUFile):

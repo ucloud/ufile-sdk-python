@@ -374,8 +374,8 @@ class ResponseInfo(object):
                 self.content_range = None
             self.etag = response.headers.get('Etag')
             if self.status_code not in [200, 204, 206]:
-                ret = response.json() if response.headers.get('Content-Type') == 'application/json' and len(
-                    response.text) > 0 else None
+                ret = response.json() if response.headers.get(
+                    'Content-Type') == 'application/json' and response.text != "" else None
                 if ret is None:
                     self.error = 'unknown error'
                     self.ret_code = -1

@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import requests
 import re
+
+import requests
+
 from . import config
 from .logger import logger
+
 
 def __return_wraper(response, content_consumed=False):
     """
@@ -17,7 +20,8 @@ def __return_wraper(response, content_consumed=False):
     if response.status_code not in [200, 204, 206]:
         return None, ResponseInfo(response)
     content_type = response.headers.get('Content-Type')
-    ret = {} if content_consumed else response.json() if isinstance(content_type, str) and content_type.startswith('application/json') else {}
+    ret = {} if content_consumed else response.json() if isinstance(content_type, str) and content_type.startswith(
+        'application/json') and response.text != "" else {}
     return ret, ResponseInfo(response, None, content_consumed)
 
 
@@ -69,6 +73,7 @@ def _post_file(url, header, data):
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
 
+
 def _uploadhit_file(url, header, params):
     """
     秒传文件到空间
@@ -102,7 +107,8 @@ def _delete_file(url, header):
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
 
-def _head_file(url,header):
+
+def _head_file(url, header):
     """
     获取文件信息
 
@@ -112,10 +118,11 @@ def _head_file(url,header):
     :return:  ResponseInfo: 响应的具体信息，UCloud UFile 服务器返回信息或者网络链接异常
     """
     try:
-        response=requests.head(url, headers=header, timeout=config.get_default('connection_timeout'))
+        response = requests.head(url, headers=header, timeout=config.get_default('connection_timeout'))
     except requests.RequestException as e:
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
+
 
 def _initialsharding(url, header):
     """
@@ -160,7 +167,8 @@ def _finishsharding(url, param, header, data):
     :return:  ResponseInfo: 响应的具体信息，UCloud UFile 服务器返回信息或者网络链接异常
     """
     try:
-        response = requests.post(url, headers=header, params=param, data=data, timeout=config.get_default('connection_timeout'))
+        response = requests.post(url, headers=header, params=param, data=data,
+                                 timeout=config.get_default('connection_timeout'))
     except requests.RequestException as e:
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
@@ -188,6 +196,7 @@ def _download_file(url, header, localfile):
         return __return_wraper(response)
     return __return_wraper(response, True)
 
+
 def _getfilelist(url, header, param):
     """
     获取文件列表
@@ -204,6 +213,7 @@ def _getfilelist(url, header, param):
         logger.error('send request error:{0}'.format(e))
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
+
 
 def _listobjects(url, header, param):
     """
@@ -222,6 +232,7 @@ def _listobjects(url, header, param):
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
 
+
 def _restore_file(url, header):
     """
     解冻冷存文件请求
@@ -237,6 +248,7 @@ def _restore_file(url, header):
     except requests.RequestException as e:
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
+
 
 def _classswitch_file(url, header, params):
     """
@@ -255,6 +267,7 @@ def _classswitch_file(url, header, params):
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
 
+
 def _copy_file(url, header):
     """
     拷贝文件到空间
@@ -270,6 +283,7 @@ def _copy_file(url, header):
     except requests.RequestException as e:
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
+
 
 def _rename_file(url, header, params):
     """
@@ -287,6 +301,7 @@ def _rename_file(url, header, params):
     except requests.RequestException as e:
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
+
 
 def _bucket_request(url, param, header):
     """
@@ -320,6 +335,7 @@ class ResponseInfo(object):
         ret_code:       Integer类型, UCloud UFile 服务内部错误码,正确服务或者网络连接则为0
         etag:           string类型,文件的etag，无则为None
     """
+
     def __init__(self, response, exception=None, content_consumed=False):
         """
         初始化 ResponseInfo 实例
@@ -358,7 +374,8 @@ class ResponseInfo(object):
                 self.content_range = None
             self.etag = response.headers.get('Etag')
             if self.status_code not in [200, 204, 206]:
-                ret = response.json() if response.headers.get('Content-Type') == 'application/json' and len(response.text) > 0 else None
+                ret = response.json() if response.headers.get(
+                    'Content-Type') == 'application/json' and response.text != "" else None
                 if ret is None:
                     self.error = 'unknown error'
                     self.ret_code = -1

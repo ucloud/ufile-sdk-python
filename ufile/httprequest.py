@@ -2,10 +2,17 @@
 
 import re
 
-import requests
+from requests import Session, RequestException
+from requests.adapters import HTTPAdapter
 
 from . import config
 from .logger import logger
+
+requests = Session()
+requests.mount("http://",
+               HTTPAdapter(pool_connections=config.CONNECTION_POOL_SIZE, pool_maxsize=config.CONNECTION_POOL_SIZE))
+requests.mount("https://",
+               HTTPAdapter(pool_connections=config.CONNECTION_POOL_SIZE, pool_maxsize=config.CONNECTION_POOL_SIZE))
 
 
 def __return_wraper(response, content_consumed=False):

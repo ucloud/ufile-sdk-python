@@ -12,6 +12,7 @@ UCLOUD_PROXY_SUFFIX = '.cn-bj.ufileos.com'
 UCLOUD_DOWNLOAD_SUFFIX = '.cn-bj.ufileos.com'
 UCLOUD_API_URL = 'http://api.ucloud.cn'
 BLOCKSIZE = 1024 * 1024 * 4
+CONNECTION_POOL_SIZE = 10
 
 _config = {
     'connection_timeout': None,

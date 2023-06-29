@@ -482,37 +482,6 @@ class FileManager(BaseUFile):
 
         return _copy_file(url, header)
 
-    def rename(self, bucket, key, newkey, force='true', header=None):
-        """
-        重命名文件方法
-
-        :param bucket: string类型, 空间名称
-        :param key:  string类型, 源文件在空间中的名称
-        :param newkey:  string类型, 文件重命名后的新名称
-        :param force:  string类型, 是否强行覆盖文件，值为'true'会覆盖，其他值则不会
-        :param header: dict类型，http 请求header，键值对类型分别为string，比如{'User-Agent': 'Google Chrome'}
-        :return: ret: 如果http状态码为[200, 204, 206]之一则返回None，否则如果服务器返回json信息则返回dict类型，键值对类型分别为string, unicode string类型，否则返回空的dict
-        :return:  ResponseInfo: 响应的具体信息，UCloud UFile 服务器返回信息或者网络链接异常
-        """
-        if header is None:
-            header=dict()
-        else:
-            _check_dict(header)
-        if 'User-Agent' not in header:
-            header['User-Agent'] = config.get_default('user_agent')
-
-        authorization = self.authorization('put', bucket, key, header)
-        header['Authorization'] = authorization
-
-        # parameter
-        params = {'newFileName': newkey,
-                  'force': force}
-
-        logger.info('start rename {0} in bucket {1}'.format(key, bucket))
-        url = ufile_rename_url(bucket, key, upload_suffix=self.__upload_suffix)
-
-        return _rename_file(url, header, params)
-
     def listobjects(self, bucket, prefix=None, marker=None, maxkeys=None, delimiter=None, header=None):
         """
         获取bucket下的文件列表

@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 
-
-import os
 import json
+import math
+import os
+import threading
+import time
+
+from . import config
 from .baseufile import BaseUFile
-from .util import _check_dict, initialsharding_url, finishsharding_url, shardingupload_url, _file_iter, mimetype_from_file, mimetype_from_buffer,deprecated
+from .compact import s
 from .httprequest import ResponseInfo, _initialsharding, _finishsharding, _shardingupload
 from .logger import logger
-from .compact import s
-from . import config
-import time
-import threading
+from .util import _check_dict, initialsharding_url, finishsharding_url, shardingupload_url, _file_iter, \
+    mimetype_from_file, mimetype_from_buffer, deprecated
 
 
 class MultipartUploadUFile(BaseUFile):
@@ -45,7 +47,8 @@ class MultipartUploadUFile(BaseUFile):
         self.__upload_suffix = upload_suffix
         self.pausepartnumber = 0
 
-    def uploadstream(self, bucket, key, stream, maxthread=4, retrycount=3, retryinterval=5, mime_type=None, header=None):
+    def uploadstream(self, bucket, key, stream, maxthread=4, retrycount=3, retryinterval=5, mime_type=None,
+                     header=None):
         """
         分片上传二进制数据流到UFile空间
 
@@ -69,8 +72,8 @@ class MultipartUploadUFile(BaseUFile):
         self.__stream = stream
         self.pausepartnumber = 0
 
-        self.__threaddict = {}                      #线程字典，用于保证finish前等待运行中的uploadpart线程
-        self.__errresp =  None                      #用于主函数返回的errresp
+        self.__threaddict = {}  # 线程字典，用于保证finish前等待运行中的uploadpart线程
+        self.__errresp = None  # 用于主函数返回的errresp
 
         if self.__header is None:
             self.__header = dict()
@@ -103,33 +106,39 @@ class MultipartUploadUFile(BaseUFile):
         authorization = self.authorization('put', self.__bucket, self.__key, self.__header)
         self.__header['Authorization'] = authorization
 
-        sem=threading.Semaphore(maxthread)
+        sem = threading.Semaphore(maxthread)
         partnumber = 0
         for data in _file_iter(self.__stream, self.blocksize):
-            sem.acquire()     #控制最大并发线程数
-            if self.__errresp:#如果有分片上传失败，停止后续分片上传
+            sem.acquire()  # 控制最大并发线程数
+            if self.__errresp:  # 如果有分片上传失败，停止后续分片上传
                 sem.release()
                 break
             self.etaglist.append("")
-            thread1 = threading.Thread(target=self.__partthread, args=(sem, self.__bucket, self.__key, self.uploadid, partnumber, self.__header, data, retrycount, retryinterval, self.etaglist, self.__upload_suffix))
+            thread1 = threading.Thread(target=self.__partthread, args=(
+            sem, self.__bucket, self.__key, self.uploadid, partnumber, self.__header, data, retrycount, retryinterval,
+            self.etaglist, self.__upload_suffix))
             self.__threaddict[partnumber] = thread1
             thread1.start()
             partnumber += 1
-        
-        for thread in list(self.__threaddict.values()):#转为list是因为遍历字典时长度变化会报错
+
+        for thread in list(self.__threaddict.values()):  # 转为list是因为遍历字典时长度变化会报错
             thread.join()
 
         if self.__errresp:
             self.pausepartnumber = self.etaglist.index("")
-            logger.error('multipart upload failed. uploadid:{0}, pausepartnumber: {1}, key: {2} , error message{3}. FAIL!!!'.format(self.uploadid, self.pausepartnumber, self.__key,self.__errresp.error))
-            return None , self.__errresp
+            logger.error(
+                'multipart upload failed. uploadid:{0}, pausepartnumber: {1}, key: {2} , error message{3}. FAIL!!!'.format(
+                    self.uploadid, self.pausepartnumber, self.__key, self.__errresp.error))
+            return None, self.__errresp
         else:
             self.pausepartnumber = len(self.etaglist)
 
         logger.info('start finish sharding request.')
         ret, resp = self.__finishupload()
         if not resp.ok():
-            logger.error('multipart upload failed. uploadid:{0}, pausepartnumber: {1}, key: {2}, error message: {3}. FAIL!!!'.format(self.uploadid, self.pausepartnumber, self.__key,resp.error))
+            logger.error(
+                'multipart upload failed. uploadid:{0}, pausepartnumber: {1}, key: {2}, error message: {3}. FAIL!!!'.format(
+                    self.uploadid, self.pausepartnumber, self.__key, resp.error))
         else:
             logger.info('mulitpart upload succeed. uploadid: {0}, key: {1} SUCCEED'.format(self.uploadid, self.__key))
         return ret, resp
@@ -152,7 +161,6 @@ class MultipartUploadUFile(BaseUFile):
         mime_type = s(mimetype_from_file(self.__localfile))
         with open(localfile, 'rb') as fd:
             return self.uploadstream(bucket, key, fd, maxthread, retrycount, retryinterval, mime_type, header)
-
 
     def __initialsharding(self):
         """
@@ -211,7 +219,8 @@ class MultipartUploadUFile(BaseUFile):
         return _finishsharding(url, params, self.__header, data)
 
     @deprecated("Deprecated since version 3.2.6")
-    def resumeuploadfile(self, retrycount=3, retryinterval=5, bucket=None, key=None, uploadid=None, blocksize=None, etaglist=None, localfile=None, pausepartnumber=None, mime_type=None, header=None):
+    def resumeuploadfile(self, retrycount=3, retryinterval=5, bucket=None, key=None, uploadid=None, blocksize=None,
+                         etaglist=None, localfile=None, pausepartnumber=None, mime_type=None, header=None):
         """
         断点续传失败的本地文件分片
         可以在调用uploadfile失败后重新续传，也可以通过传递所有需要的参数续传
@@ -242,9 +251,11 @@ class MultipartUploadUFile(BaseUFile):
             mime_type = s(mimetype_from_file(self.__localfile))
         with open(self.__localfile, 'rb') as fd:
             fd.seek(self.pausepartnumber * self.blocksize, os.SEEK_SET)
-            return self.resumeuploadstream(retrycount, retryinterval, bucket, key, uploadid, blocksize, etaglist, fd, pausepartnumber, mime_type, header)
+            return self.resumeuploadstream(retrycount, retryinterval, bucket, key, uploadid, blocksize, etaglist, fd,
+                                           pausepartnumber, mime_type, header)
 
-    def resumeuploadstream(self, retrycount=3, retryinterval=5, bucket=None, key=None, uploadid=None, blocksize=None, etaglist=None, stream=None, pausepartnumber=None, mime_type=None, header=None):
+    def resumeuploadstream(self, retrycount=3, retryinterval=5, bucket=None, key=None, uploadid=None, blocksize=None,
+                           etaglist=None, stream=None, pausepartnumber=None, mime_type=None, header=None):
         """
         断点续传失败数据流的分片
         可以在调用uploadstream失败后重新续传，也可以通过传递所有需要的参数续传
@@ -316,27 +327,37 @@ class MultipartUploadUFile(BaseUFile):
                 logger.info('sharding url:{0}'.format(url))
                 ret, resp = _shardingupload(url, data, self.__header)
                 if not resp.ok():
-                    logger.error('failed {0} time when retry upload sharding {1},error message: {2}, uploadid: {3}'.format(index + 1, self.pausepartnumber, resp.error, self.uploadid))
+                    logger.error(
+                        'failed {0} time when retry upload sharding {1},error message: {2}, uploadid: {3}'.format(
+                            index + 1, self.pausepartnumber, resp.error, self.uploadid))
                     if index < retrycount - 1:
                         time.sleep(retryinterval)
                 else:
                     break
             if not resp.ok():
-                logger.error('retry upload sharding {0} failed, uploadid: {1}'.format(self.pausepartnumber, self.uploadid))
+                logger.error(
+                    'retry upload sharding {0} failed, uploadid: {1}'.format(self.pausepartnumber, self.uploadid))
                 return ret, resp
-            logger.info('retry upload sharding {0} succeed. etag: {1}, uploadid: {2}'.format(self.pausepartnumber, resp.etag, self.uploadid))
+            logger.info(
+                'retry upload sharding {0} succeed. etag: {1}, uploadid: {2}'.format(self.pausepartnumber, resp.etag,
+                                                                                     self.uploadid))
             self.pausepartnumber += 1
             self.etaglist.append(resp.etag)
         # finish sharding upload
         logger.info('start finish upload request')
         ret, resp = self.__finishupload()
         if not resp.ok():
-            logger.error('multipart upload failed. uploadid:{0}, pausepartnumber: {1}, key: {2} FAIL!!!'.format(self.uploadid, self.pausepartnumber, self.__key))
+            logger.error(
+                'multipart upload failed. uploadid:{0}, pausepartnumber: {1}, key: {2} FAIL!!!'.format(self.uploadid,
+                                                                                                       self.pausepartnumber,
+                                                                                                       self.__key))
         else:
-            logger.info('mulitpart upload succeed. uploadid: {0}, key: {1} SUCCEED!!!'.format(self.uploadid, self.__key))
+            logger.info(
+                'mulitpart upload succeed. uploadid: {0}, key: {1} SUCCEED!!!'.format(self.uploadid, self.__key))
         return ret, resp
 
-    def __partthread(self, sem, bucket, key, uploadid, part_number, header, data, retrycount, retryinterval, etaglist, upload_suffix=None):
+    def __partthread(self, sem, bucket, key, uploadid, part_number, header, data, retrycount, retryinterval, etaglist,
+                     upload_suffix=None):
         url = shardingupload_url(bucket, key, uploadid, part_number, upload_suffix=upload_suffix)
         resp = None
         for index in range(retrycount):
@@ -344,7 +365,11 @@ class MultipartUploadUFile(BaseUFile):
             logger.info('sharding url:{0}'.format(url))
             _, resp = _shardingupload(url, data, header)
             if not resp.ok():
-                logger.error('failed {0} time when upload sharding {1}.error message: {2}, uploadid: {3}'.format(index + 1, part_number, resp.error, uploadid))
+                logger.error(
+                    'failed {0} time when upload sharding {1}.error message: {2}, uploadid: {3}'.format(index + 1,
+                                                                                                        part_number,
+                                                                                                        resp.error,
+                                                                                                        uploadid))
                 if index < retrycount - 1:
                     time.sleep(retryinterval)
             else:
@@ -358,3 +383,61 @@ class MultipartUploadUFile(BaseUFile):
             etaglist[part_number] = resp.etag
         self.__threaddict.pop(part_number)
         sem.release()
+
+    def init_multipart_upload(self, bucket, key, header=None, upload_suffix=None):
+        """
+        初始化分片请求
+
+        :param bucket: string类型，空间名称
+        :param key: string类型，文件或数据在空间中的名称
+        :param header: dict类型，HTTP请求头部
+        :param upload_suffix: string类型, 如果传入此参数, 则会忽略 config 中配置的 upload_suffix 字段
+        :return: (dict, ResponseInfo) tuple类型，dict为返回的json信息，ResponseInfo为请求的返回信息
+        """
+        self.__bucket = bucket
+        self.__key = key
+        self.__header = header if header else dict()
+        self.__upload_suffix = upload_suffix if upload_suffix else config.get_default('upload_suffix')
+        ret, resp = self.__initialsharding()
+        if resp.ok:
+            self.uploadid = ret.get('UploadId')
+            self.blocksize = ret.get('BlkSize')
+        return ret, resp
+
+    def finish_upload(self):
+        """
+        完成分片请求
+
+        :return: (dict, ResponseInfo) tuple类型，dict为返回的json信息，ResponseInfo为请求的返回信息
+        """
+        return self.__finishupload()
+
+    def upload_part_copy(self, source_bucket, source_key, mime_type, offset, size, part_number, upload_suffix=None):
+        """
+        分片COPY上传
+
+        :param source_bucket: string类型, 空间名称
+        :param source_key: string类型，文件或数据在空间中的名称
+        :param mime_type: string类型，上传数据的MIME类型
+        :param offset: int类型, copy文件的起始位置
+        :param size: int类型, copy文件的大小, 不能大于源文件大小
+        :param part_number: int类型, 分片号
+        :param upload_suffix: string类型, 如果传入此参数, 则会忽略 config 中配置的 upload_suffix 字段
+        :return: ret: 如果http状态码为[200, 204, 206]之一则返回None，否则如果服务器返回json信息则返回dict类型，键值对类型分别为string, unicode string类型，否则返回空的dict
+        :return:  ResponseInfo: 响应的具体信息，UCloud UFile 服务器返回信息或者网络链接异常
+        """
+        self.__mimetype = mime_type
+        self.__upload_suffix = config.get_default("upload_suffix") if upload_suffix is None else upload_suffix
+        self.__header.update({"X-Ufile-Copy-Source": "/%s/%s" % (source_bucket, source_key)})
+        self.__header.update({"Content-Type": self.__mimetype})
+        self.__header.update({"X-Ufile-Copy-Source-Range": "bytes=%d-%d" % (offset, size - 1)})
+
+        authorization = self.authorization('put', self.__bucket, self.__key, self.__header)
+        self.__header.update({"Authorization": authorization})
+
+        url = shardingupload_url(self.__bucket, self.__key, self.uploadid, part_number,
+                                 upload_suffix=self.__upload_suffix)
+        ret, resp = _shardingupload(url, None, self.__header)
+        if resp.ok:
+            self.etaglist.append(resp.etag)
+        return ret, resp

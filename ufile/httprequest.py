@@ -58,7 +58,7 @@ def _put_stream(url, header, data):
     """
     try:
         response = requests.put(url, headers=header, data=data, timeout=config.get_default('connection_timeout'))
-    except requests.RequestException as e:
+    except RequestException as e:
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
 
@@ -76,7 +76,7 @@ def _post_file(url, header, data):
 
     try:
         response = requests.post(url, headers=header, data=data, timeout=config.get_default('connection_timeout'))
-    except requests.RequestException as e:
+    except RequestException as e:
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
 
@@ -94,7 +94,7 @@ def _uploadhit_file(url, header, params):
 
     try:
         response = requests.post(url, params=params, headers=header, timeout=config.get_default('connection_timeout'))
-    except requests.RequestException as e:
+    except RequestException as e:
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
 
@@ -110,7 +110,7 @@ def _delete_file(url, header):
     """
     try:
         response = requests.delete(url, headers=header, timeout=config.get_default('connection_timeout'))
-    except requests.RequestException as e:
+    except RequestException as e:
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
 
@@ -126,7 +126,7 @@ def _head_file(url, header):
     """
     try:
         response = requests.head(url, headers=header, timeout=config.get_default('connection_timeout'))
-    except requests.RequestException as e:
+    except RequestException as e:
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
 
@@ -142,7 +142,7 @@ def _initialsharding(url, header):
     """
     try:
         response = requests.post(url, headers=header, timeout=config.get_default('connection_timeout'))
-    except requests.RequestException as e:
+    except RequestException as e:
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
 
@@ -159,7 +159,7 @@ def _shardingupload(url, data, header):
     """
     try:
         response = requests.put(url, headers=header, data=data, timeout=config.get_default('connection_timeout'))
-    except requests.RequestException as e:
+    except RequestException as e:
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
 
@@ -176,7 +176,7 @@ def _finishsharding(url, param, header, data):
     try:
         response = requests.post(url, headers=header, params=param, data=data,
                                  timeout=config.get_default('connection_timeout'))
-    except requests.RequestException as e:
+    except RequestException as e:
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
 
@@ -193,7 +193,7 @@ def _download_file(url, header, localfile):
     """
     try:
         response = requests.get(url, headers=header, stream=True)
-    except requests.RequestException as e:
+    except RequestException as e:
         return None, ResponseInfo(None, e)
     if response.status_code in [200, 206]:
         with open(localfile, 'wb') as fd:
@@ -216,7 +216,7 @@ def _getfilelist(url, header, param):
 
     try:
         response = requests.get(url, headers=header, params=param, timeout=config.get_default('connection_timeout'))
-    except requests.RequestException as e:
+    except RequestException as e:
         logger.error('send request error:{0}'.format(e))
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
@@ -234,7 +234,7 @@ def _listobjects(url, header, param):
 
     try:
         response = requests.get(url, headers=header, params=param, timeout=config.get_default('connection_timeout'))
-    except requests.RequestException as e:
+    except RequestException as e:
         logger.error('send request error:{0}'.format(e))
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
@@ -252,7 +252,7 @@ def _restore_file(url, header):
 
     try:
         response = requests.put(url, headers=header, timeout=config.get_default('connection_timeout'))
-    except requests.RequestException as e:
+    except RequestException as e:
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
 
@@ -270,7 +270,7 @@ def _classswitch_file(url, header, params):
 
     try:
         response = requests.put(url, params=params, headers=header, timeout=config.get_default('connection_timeout'))
-    except requests.RequestException as e:
+    except RequestException as e:
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
 
@@ -287,7 +287,7 @@ def _copy_file(url, header):
 
     try:
         response = requests.put(url, headers=header, timeout=config.get_default('connection_timeout'))
-    except requests.RequestException as e:
+    except RequestException as e:
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
 
@@ -305,7 +305,7 @@ def _rename_file(url, header, params):
 
     try:
         response = requests.put(url, params=params, headers=header, timeout=config.get_default('connection_timeout'))
-    except requests.RequestException as e:
+    except RequestException as e:
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
 
@@ -322,7 +322,7 @@ def _bucket_request(url, param, header):
     """
     try:
         response = requests.get(url, headers=header, params=param)
-    except requests.RequestException as e:
+    except RequestException as e:
         return None, ResponseInfo(None, e)
     return __return_wraper(response)
 

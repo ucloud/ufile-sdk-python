@@ -46,6 +46,10 @@ if is_py2:
     def url_parse(data):
         return urllib.urlencode(data)
 
+    def quote(data):
+        return urllib.quote(data)
+
+
 elif is_py3:
     from urllib import parse  
     import io
@@ -73,4 +77,7 @@ elif is_py3:
 
     def url_parse(data):
         return parse.urlencode(data)
+
+    def quote(data):
+        return parse.quote(data)
 

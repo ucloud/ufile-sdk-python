@@ -9,10 +9,10 @@ import time
 from . import config
 from .baseufile import BaseUFile
 from .compact import s
-from .httprequest import ResponseInfo, _initialsharding, _finishsharding, _shardingupload
+from .httprequest import ResponseInfo, _initialsharding, _finishsharding, _shardingupload, _list_parts
 from .logger import logger
 from .util import _check_dict, initialsharding_url, finishsharding_url, shardingupload_url, _file_iter, \
-    mimetype_from_file, mimetype_from_buffer, deprecated
+    mimetype_from_file, mimetype_from_buffer, deprecated, ufile_listparts_url
 
 
 class MultipartUploadUFile(BaseUFile):
@@ -115,8 +115,9 @@ class MultipartUploadUFile(BaseUFile):
                 break
             self.etaglist.append("")
             thread1 = threading.Thread(target=self.__partthread, args=(
-            sem, self.__bucket, self.__key, self.uploadid, partnumber, self.__header, data, retrycount, retryinterval,
-            self.etaglist, self.__upload_suffix))
+                sem, self.__bucket, self.__key, self.uploadid, partnumber, self.__header, data, retrycount,
+                retryinterval,
+                self.etaglist, self.__upload_suffix))
             self.__threaddict[partnumber] = thread1
             thread1.start()
             partnumber += 1
@@ -397,6 +398,8 @@ class MultipartUploadUFile(BaseUFile):
         self.__bucket = bucket
         self.__key = key
         self.__header = header if header else dict()
+        if 'User-Agent' not in self.__header:
+            self.__header['User-Agent'] = config.get_default('user_agent')
         self.__upload_suffix = upload_suffix if upload_suffix else config.get_default('upload_suffix')
         ret, resp = self.__initialsharding()
         if resp.ok:
@@ -431,7 +434,8 @@ class MultipartUploadUFile(BaseUFile):
         self.__header.update({"X-Ufile-Copy-Source": "/%s/%s" % (source_bucket, source_key)})
         self.__header.update({"Content-Type": self.__mimetype})
         self.__header.update({"X-Ufile-Copy-Source-Range": "bytes=%d-%d" % (offset, size - 1)})
-
+        if 'User-Agent' not in self.__header:
+            self.__header['User-Agent'] = config.get_default('user_agent')
         authorization = self.authorization('put', self.__bucket, self.__key, self.__header)
         self.__header.update({"Authorization": authorization})
 
@@ -441,3 +445,25 @@ class MultipartUploadUFile(BaseUFile):
         if resp.ok:
             self.etaglist.append(resp.etag)
         return ret, resp
+
+    def list_parts(self, bucket, upload_id, max_parts=None, part_number_marker=None, header=None, upload_suffix=None):
+        """
+        获取未完成分片上传的对象的已上传成功的分片列表。
+
+        :param bucket: string类型，空间名称
+        :param upload_id: string类型，初始化分片上传时返回的uploadid
+        :param max_parts: int类型，返回的最大条目数，默认为1000
+        :param part_number_marker: int类型，返回的起始条目，默认为0
+        :param header: dict类型，HTTP请求头部
+        :param upload_suffix: string类型, 如果传入此参数, 则会忽略 config 中配置的 upload_suffix 字段
+        :return: (dict, ResponseInfo) tuple类型，dict为返回的json信息，ResponseInfo为请求的返回信息
+        """
+        self.__header = header if header else dict()
+        if 'User-Agent' not in self.__header:
+            self.__header['User-Agent'] = config.get_default('user_agent')
+        if upload_suffix is not None:
+            self.__upload_suffix = upload_suffix
+        authorization = self.authorization('get', bucket, "", self.__header, action='muploadpart')
+        self.__header.update({"Authorization": authorization})
+        url = ufile_listparts_url(bucket, self.__upload_suffix, upload_id, max_parts, part_number_marker)
+        return _list_parts(url, self.__header)

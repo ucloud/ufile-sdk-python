@@ -327,6 +327,22 @@ def _bucket_request(url, param, header):
     return __return_wraper(response)
 
 
+def _list_parts(url, header):
+    """
+    UCloud UFile 获取分片上传列表信息请求
+
+    :param url: String类型，获取分片上传列表信息请求的url
+    :param header: dict类型，键值对类型分别为string类型，HTTP请求头信息
+    :return: ret: 如果http状态码不为[200, 204, 206]之一则返回None，否则如果服务器返回json信息则返回dict类型，键值对类型分别为string, unicode string类型，否则返回空的dict
+    :return:  ResponseInfo: 响应的具体信息，UCloud UFile 服务器返回信息或者网络链接异常
+    """
+    try:
+        response = requests.get(url, headers=header)
+    except RequestException as e:
+        return None, ResponseInfo(None, e)
+    return __return_wraper(response)
+
+
 class ResponseInfo(object):
     """
     UCloud UFile 服务器返回信息,解析UCloud UFile服务器返回信息以及网络连接问题

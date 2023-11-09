@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 
-from .compact import *
-from . import config
-
 import base64
 import hashlib
+import mimetypes
 import os
 import struct
-
-import mimetypes
-from os import path
 import warnings
-from .config import BLOCKSIZE 
+from os import path
+
+from . import config
+from .compact import *
+from .config import BLOCKSIZE
 
 _EXTRA_TYPES_MAP = {
     ".js": "application/javascript",
@@ -428,7 +427,10 @@ def shardingupload_url(bucket, key, uploadid, part_number, upload_suffix=None):
     :param part_number: integer类型, 分片上传的编号,从0开始
     :return: string类型, 结束分片上传UFile的url
     """
-    return 'http://{0}{1}/{2}?uploadId={3}&partNumber={4}'.format(bucket, upload_suffix or config.get_default('upload_suffix'), key, uploadid, s(str(part_number)))
+    return 'http://{0}{1}/{2}?uploadId={3}&partNumber={4}'.format(bucket,
+                                                                  upload_suffix or config.get_default('upload_suffix'),
+                                                                  key, uploadid, s(str(part_number)))
+
 
 def ufile_getfilelist_url(bucket, upload_suffix=None):
     """
@@ -438,6 +440,7 @@ def ufile_getfilelist_url(bucket, upload_suffix=None):
     :return: string类型，获取文件列表的url
     """
     return 'http://{0}{1}/?list'.format(bucket, upload_suffix or config.get_default('upload_suffix'))
+
 
 def mimetype_from_file(file):
     """
@@ -454,6 +457,7 @@ def mimetype_from_file(file):
 
     return 'application/unknowntype'
 
+
 def mimetype_from_buffer(stream):
     """
     获取流对象的mimetype
@@ -462,6 +466,7 @@ def mimetype_from_buffer(stream):
     :return: string类型，获取流对象的mimetype
     """
     return 'application/octet-stream'
+
 
 def ufile_restore_url(bucket, key, upload_suffix=None):
     """
@@ -473,6 +478,7 @@ def ufile_restore_url(bucket, key, upload_suffix=None):
     """
     return 'http://{0}{1}/{2}?restore'.format(bucket, upload_suffix or config.get_default('upload_suffix'), key)
 
+
 def ufile_classswitch_url(bucket, key, upload_suffix=None):
     """
     文件存储类型转换的url
@@ -483,6 +489,7 @@ def ufile_classswitch_url(bucket, key, upload_suffix=None):
     """
     return 'http://{0}{1}/{2}'.format(bucket, upload_suffix or config.get_default('upload_suffix'), key)
 
+
 def ufile_copy_url(bucket, key, upload_suffix=None):
     """
     拷贝文件的url
@@ -492,6 +499,7 @@ def ufile_copy_url(bucket, key, upload_suffix=None):
     :return: string类型, 拷贝文件的url
     """
     return 'http://{0}{1}/{2}'.format(bucket, upload_suffix or config.get_default('upload_suffix'), key)
+
 
 def ufile_rename_url(bucket, key, upload_suffix=None):
     """
@@ -504,6 +512,7 @@ def ufile_rename_url(bucket, key, upload_suffix=None):
     """
     return 'http://{0}{1}/{2}'.format(bucket, upload_suffix or config.get_default('upload_suffix'), key)
 
+
 def ufile_listobjects_url(bucket, upload_suffix=None):
     """
     获取目录文件列表的url
@@ -513,13 +522,35 @@ def ufile_listobjects_url(bucket, upload_suffix=None):
     """
     return 'http://{0}{1}/?listobjects'.format(bucket, upload_suffix or config.get_default('upload_suffix'))
 
+
+def ufile_listparts_url(bucket, upload_suffix, upload_id, max_parts=None, part_number_marker=None):
+    """
+    获取未完成分片上传的对象的已上传成功的分片列表。
+
+    :param bucket: string类型, 空间名称
+    :param upload_suffix: string类型, 域名后缀
+    :param upload_id: string类型, 初始化分片上传获得的uploadid字符串
+    :param max_parts: integer类型, 规定在US3响应中的最大Part数目。
+    :param part_number_marker: integer类型, 指定List的起始位置，只有Part Number数目大于该参数的Part会被列出
+    """
+    url = 'http://{0}{1}/?muploadpart&uploadId={2}'.format(bucket, upload_suffix or config.get_default('upload_suffix'),
+                                                           upload_id)
+    if max_parts is not None:
+        url += '&max-parts={}'.format(max_parts)
+    if part_number_marker is not None:
+        url += '&part-number-marker={}'.format(part_number_marker)
+    return url
+
+
 def deprecated(message):
-  def deprecated_decorator(func):
-      def deprecated_func(*args, **kwargs):
-          warnings.warn("Call to deprecated function {} . -- {}".format(func.__name__, message),
-                        category=DeprecationWarning,
-                        stacklevel=2)
-          warnings.simplefilter('default', DeprecationWarning)
-          return func(*args, **kwargs)
-      return deprecated_func
-  return deprecated_decorator
+    def deprecated_decorator(func):
+        def deprecated_func(*args, **kwargs):
+            warnings.warn("Call to deprecated function {} . -- {}".format(func.__name__, message),
+                          category=DeprecationWarning,
+                          stacklevel=2)
+            warnings.simplefilter('default', DeprecationWarning)
+            return func(*args, **kwargs)
+
+        return deprecated_func
+
+    return deprecated_decorator

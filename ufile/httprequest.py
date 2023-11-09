@@ -327,7 +327,7 @@ def _bucket_request(url, param, header):
     return __return_wraper(response)
 
 
-def _list_parts(url, header):
+def _get_multi_upload_part(url, header):
     """
     UCloud UFile 获取分片上传列表信息请求
 

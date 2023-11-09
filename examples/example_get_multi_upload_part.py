@@ -17,8 +17,8 @@ upload_suffix = '.cn-bj.ufileos.com'
 
 multi_part_upload_ufile_handler = multipartuploadufile.MultipartUploadUFile(public_key, private_key, upload_suffix)
 
-ret, resp = multi_part_upload_ufile_handler.list_parts(bucket, upload_id, max_parts, part_number_marker,
-                                                       upload_suffix=upload_suffix)
+ret, resp = multi_part_upload_ufile_handler.get_multi_upload_part(bucket, upload_id, max_parts, part_number_marker,
+                                                                  upload_suffix=upload_suffix)
 assert resp.status_code == 200, print(
     "status: %d error: %s" % (resp.status_code, resp.error if resp.error else resp.content))
 

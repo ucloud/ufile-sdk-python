@@ -9,7 +9,7 @@ import time
 from . import config
 from .baseufile import BaseUFile
 from .compact import s
-from .httprequest import ResponseInfo, _initialsharding, _finishsharding, _shardingupload, _list_parts
+from .httprequest import ResponseInfo, _initialsharding, _finishsharding, _shardingupload, _get_multi_upload_part
 from .logger import logger
 from .util import _check_dict, initialsharding_url, finishsharding_url, shardingupload_url, _file_iter, \
     mimetype_from_file, mimetype_from_buffer, deprecated, ufile_listparts_url
@@ -446,7 +446,7 @@ class MultipartUploadUFile(BaseUFile):
             self.etaglist.append(resp.etag)
         return ret, resp
 
-    def list_parts(self, bucket, upload_id, max_parts=None, part_number_marker=None, header=None, upload_suffix=None):
+    def get_multi_upload_part(self, bucket, upload_id, max_parts=None, part_number_marker=None, header=None, upload_suffix=None):
         """
         获取未完成分片上传的对象的已上传成功的分片列表。
 
@@ -466,4 +466,4 @@ class MultipartUploadUFile(BaseUFile):
         authorization = self.authorization('get', bucket, "", self.__header, action='muploadpart')
         self.__header.update({"Authorization": authorization})
         url = ufile_listparts_url(bucket, self.__upload_suffix, upload_id, max_parts, part_number_marker)
-        return _list_parts(url, self.__header)
+        return _get_multi_upload_part(url, self.__header)

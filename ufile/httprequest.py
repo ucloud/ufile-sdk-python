@@ -382,6 +382,7 @@ class ResponseInfo(object):
             self.ret_code = None
             self.content = None
             self.md5 = None
+            self.x_ufile_restore = None
         else:
             self.status_code = response.status_code
             self.x_session_id = response.headers.get('X-SessionId')
@@ -390,6 +391,7 @@ class ResponseInfo(object):
             self.content_length = response.headers.get('Content-Length')
             content_length = response.headers.get('content-range')
             self.content = None if content_consumed else response.content
+            self.x_ufile_restore = response.headers.get('X-Ufile-restore')
             if content_length is not None:
                 byteslist = re.split('[- /]', content_length)
                 self.content_range = (int(byteslist[1]), int(byteslist[2]))

@@ -542,6 +542,17 @@ def ufile_listparts_url(bucket, upload_suffix, upload_id, max_parts=None, part_n
     return url
 
 
+def ufile_op_meta_url(bucket, key, upload_suffix=None):
+    """
+    文件元数据的url
+
+    :param bucket: string类型, 待创建的空间名称
+    :param key:  string类型, 在空间中的文件名
+    :return: string类型, 获取文件元数据的url
+    """
+    return 'http://{0}{1}/{2}?opmeta'.format(bucket, upload_suffix or config.get_default('upload_suffix'), key)
+
+
 def deprecated(message):
     def deprecated_decorator(func):
         def deprecated_func(*args, **kwargs):

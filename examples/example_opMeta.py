@@ -16,6 +16,6 @@ upload_suffix = 'YOUR_UPLOAD_SUFFIX'
 file = filemanager.FileManager(public_key, private_key, upload_suffix)
 
 # 设置文件元数据
-ret, resp = file.setfilemetakey(bucket, key, metakey, metavalue)
+ret, resp = file.opMeta(bucket, key, metakey, metavalue)
 assert resp.status_code == 200, resp.error
 print('setfilemetakey success')

@@ -343,6 +343,21 @@ def _get_multi_upload_part(url, header):
     return __return_wraper(response)
 
 
+def _op_meta(url, body, header):
+    """
+    UCloud UFile 文件元数据操作请求
+
+    :param url: String类型，文件元数据操作请求的url
+    :param body: dict类型，键值对类型分别为string类型，HTTP请求的body信息
+    :param header: dict类型，键值对类型分别为string类型，HTTP请求头信息
+    """
+    try:
+        response = requests.post(url, headers=header, data=body, timeout=config.get_default('connection_timeout'))
+    except RequestException as e:
+        return None, ResponseInfo(None, e)
+    return __return_wraper(response)
+
+
 class ResponseInfo(object):
     """
     UCloud UFile 服务器返回信息,解析UCloud UFile服务器返回信息以及网络连接问题
@@ -382,6 +397,7 @@ class ResponseInfo(object):
             self.ret_code = None
             self.content = None
             self.md5 = None
+            self.x_ufile_restore = None
         else:
             self.status_code = response.status_code
             self.x_session_id = response.headers.get('X-SessionId')
@@ -390,6 +406,7 @@ class ResponseInfo(object):
             self.content_length = response.headers.get('Content-Length')
             content_length = response.headers.get('content-range')
             self.content = None if content_consumed else response.content
+            self.x_ufile_restore = response.headers.get('X-Ufile-restore')
             if content_length is not None:
                 byteslist = re.split('[- /]', content_length)
                 self.content_range = (int(byteslist[1]), int(byteslist[2]))

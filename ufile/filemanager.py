@@ -10,11 +10,12 @@ from .baseufile import BaseUFile
 from .compact import b, s, u, url_parse, quote
 from .config import BLOCKSIZE
 from .httprequest import _put_stream, _put_file, _post_file, ResponseInfo, _uploadhit_file, _download_file, \
-    _delete_file, _getfilelist, _head_file, _restore_file, _classswitch_file, _copy_file, _rename_file, _listobjects
+    _delete_file, _getfilelist, _head_file, _restore_file, _classswitch_file, _copy_file, _rename_file, _listobjects, \
+    _op_meta
 from .logger import logger
 from .util import _check_dict, ufile_put_url, ufile_post_url, file_etag, ufile_uploadhit_url, ufile_getfilelist_url, \
     mimetype_from_file, ufile_restore_url, ufile_classswitch_url, ufile_copy_url, ufile_rename_url, \
-    ufile_listobjects_url
+    ufile_listobjects_url, ufile_op_meta_url
 
 
 class FileManager(BaseUFile):
@@ -535,3 +536,35 @@ class FileManager(BaseUFile):
         logger.info(info_message)
         url = ufile_listobjects_url(bucket, upload_suffix=self.__upload_suffix)
         return _listobjects(url, header, param)
+
+    def opMeta(self, bucket, key, metak, metav, op="set", header=None):
+        """
+        获取文件元数据
+
+        :param bucket: string 类型，空间名称
+        :param key: string 类型，文件在空间中的名称
+        :param metak: string 类型，元数据的key
+        :param metav: string 类型，元数据的value
+        :param op: string 类型，操作类型，目前只支持set
+        :param header: dict类型，http 请求header，键值对类型分别为string，比如{'User-Agent': 'Google Chrome'}
+        :return: ret: 如果http状态码为[200, 204, 206]之一则返回None，否则如果服务器返回json信息则返回dict类型，键值对类型分别为string, unicode string类型，否则返回空的dict
+        :return:  ResponseInfo: 响应的具体信息，UCloud UFile 服务器返回信息或者网络链接异常
+        """
+        if header is None:
+            header = dict()
+        else:
+            _check_dict(header)
+
+        if 'User-Agent' not in header:
+            header['User-Agent'] = config.get_default('user_agent')
+        header['Content-Type'] = 'application/json'
+
+        auth = self.authorization('post', bucket, key, header, action="opmeta")
+        header['Authorization'] = auth
+        data = {
+            'op': op,
+            'metak': metak,
+            'metav': metav
+        }
+        url = ufile_op_meta_url(bucket, key, upload_suffix=self.__upload_suffix)
+        return _op_meta(url, json.dumps(data), header)

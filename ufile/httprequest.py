@@ -197,7 +197,9 @@ def _download_file(url, header, localfile):
         return None, ResponseInfo(None, e)
     if response.status_code in [200, 206]:
         with open(localfile, 'wb') as fd:
-            for block in response.iter_content(config.BLOCKSIZE):
+            file_size = int(response.headers.get('Content-Length', 0))
+            for i, block in enumerate(response.iter_content(config.BLOCKSIZE)):
+                logger.info(f"已下载{i * config.BLOCKSIZE} / {file_size}")
                 fd.write(block)
     else:
         return __return_wraper(response)

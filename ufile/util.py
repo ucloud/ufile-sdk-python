@@ -491,7 +491,7 @@ def ufile_restore_url(bucket, key, upload_suffix=None):
     :return: string类型, 解冻文件的url
     """
     if OPEN_SSL:
-        'https://{0}{1}/{2}?restore'.format(bucket, upload_suffix or config.get_default('upload_suffix'), key)
+        return 'https://{0}{1}/{2}?restore'.format(bucket, upload_suffix or config.get_default('upload_suffix'), key)
     return 'http://{0}{1}/{2}?restore'.format(bucket, upload_suffix or config.get_default('upload_suffix'), key)
 
 
@@ -504,7 +504,7 @@ def ufile_classswitch_url(bucket, key, upload_suffix=None):
     :return: string类型, 类型转换的url
     """
     if OPEN_SSL:
-        'https://{0}{1}/{2}'.format(bucket, upload_suffix or config.get_default('upload_suffix'), key)
+        return 'https://{0}{1}/{2}'.format(bucket, upload_suffix or config.get_default('upload_suffix'), key)
     return 'http://{0}{1}/{2}'.format(bucket, upload_suffix or config.get_default('upload_suffix'), key)
 
 
@@ -517,7 +517,7 @@ def ufile_copy_url(bucket, key, upload_suffix=None):
     :return: string类型, 拷贝文件的url
     """
     if OPEN_SSL:
-        'https://{0}{1}/{2}'.format(bucket, upload_suffix or config.get_default('upload_suffix'), key)
+        return 'https://{0}{1}/{2}'.format(bucket, upload_suffix or config.get_default('upload_suffix'), key)
     return 'http://{0}{1}/{2}'.format(bucket, upload_suffix or config.get_default('upload_suffix'), key)
 
 
@@ -531,7 +531,7 @@ def ufile_rename_url(bucket, key, upload_suffix=None):
     :return: string类型, 重命名文件的url
     """
     if OPEN_SSL:
-        'https://{0}{1}/{2}'.format(bucket, upload_suffix or config.get_default('upload_suffix'), key)
+        return 'https://{0}{1}/{2}'.format(bucket, upload_suffix or config.get_default('upload_suffix'), key)
     return 'http://{0}{1}/{2}'.format(bucket, upload_suffix or config.get_default('upload_suffix'), key)
 
 
@@ -543,7 +543,7 @@ def ufile_listobjects_url(bucket, upload_suffix=None):
     :return: string类型，获取目录文件列表的url
     """
     if OPEN_SSL:
-        'https://{0}{1}/?listobjects'.format(bucket, upload_suffix or config.get_default('upload_suffix'))
+        return 'https://{0}{1}/?listobjects'.format(bucket, upload_suffix or config.get_default('upload_suffix'))
     return 'http://{0}{1}/?listobjects'.format(bucket, upload_suffix or config.get_default('upload_suffix'))
 
 

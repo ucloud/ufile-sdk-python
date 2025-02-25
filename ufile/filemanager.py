@@ -8,7 +8,7 @@ import time
 from . import config
 from .baseufile import BaseUFile
 from .compact import b, s, u, url_parse, quote
-from .config import BLOCKSIZE, OPEN_SSL
+from .config import BLOCKSIZE, get_default
 from .httprequest import _put_stream, _put_file, _post_file, ResponseInfo, _uploadhit_file, _download_file, \
     _delete_file, _getfilelist, _head_file, _restore_file, _classswitch_file, _copy_file, _rename_file, _listobjects, \
     _op_meta
@@ -38,7 +38,7 @@ class FileManager(BaseUFile):
         self.__download_suffix = download_suffix
 
     def _get_download_domain(self, bucket):
-        if OPEN_SSL:
+        if get_default("open_ssl"):
             return 'https://{0}{1}'.format(bucket, self.__download_suffix or config.get_default('download_suffix'))
         return 'http://{0}{1}'.format(bucket, self.__download_suffix or config.get_default('download_suffix'))
 

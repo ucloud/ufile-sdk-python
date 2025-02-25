@@ -11,6 +11,7 @@ USER_AGENT = 'UCloud UFile Python SDK {0} ({1} : Python/{2})'.format(__version__
 UCLOUD_PROXY_SUFFIX = '.cn-bj.ufileos.com'
 UCLOUD_DOWNLOAD_SUFFIX = '.cn-bj.ufileos.com'
 UCLOUD_API_URL = 'http://api.ucloud.cn'
+UCLOUD_API_URL_HTTPS = 'https://api.ucloud.cn'
 BLOCKSIZE = 1024 * 1024 * 4
 CONNECTION_POOL_SIZE = 10
 
@@ -22,6 +23,7 @@ _config = {
     'user_agent': USER_AGENT,
     # 调用上传接口时，是否计算 md5
     'md5': False,
+    'open_ssl': False,
 }
 
 
@@ -32,7 +34,7 @@ def get_default(key):
     global _config
     return None if key not in _config else _config[key]
 
-def set_default(connection_timeout=None, expires=None, user_agent=None, uploadsuffix=None, downloadsuffix=None, md5=None):
+def set_default(connection_timeout=None, expires=None, user_agent=None, uploadsuffix=None, downloadsuffix=None, md5=None, open_ssl=False):
     """
     设置默认配置
 
@@ -56,3 +58,4 @@ def set_default(connection_timeout=None, expires=None, user_agent=None, uploadsu
         _config['download_suffix'] = downloadsuffix
     if md5 != None:
         _config['md5'] = md5
+    _config['open_ssl'] = open_ssl

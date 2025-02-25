@@ -4,15 +4,15 @@ from .logger import logger
 from .auth import Auth
 from .util import _check_dict
 from . import config
-from .config import UCLOUD_API_URL
+from .config import UCLOUD_API_URL, UCLOUD_API_URL_HTTPS, get_default
 from .httprequest import _bucket_request, ResponseInfo
 from .compact import s
+
 
 class BucketManager(object):
     """
     UCloud UFile 空间管理类
     """
-
 
     def __init__(self, public_key, private_key):
         """
@@ -24,7 +24,6 @@ class BucketManager(object):
         """
         self.__auth = Auth(public_key, private_key)
 
-
     def set_keys(self, public_key, private_key):
         """
         重新设置账户API公私钥
@@ -34,7 +33,6 @@ class BucketManager(object):
         :return: None，如果为非法的公私钥则抛出ValueError异常
         """
         self.__auth.set_keys(public_key, private_key)
-
 
     def createbucket(self, bucket, region, buckettype='private', domainlist=None, header=None, projectid=None):
         """
@@ -78,8 +76,9 @@ class BucketManager(object):
         signature = self.__auth.bucket_signature(param)
         param['Signature'] = signature
         logger.info('start create bucket {0}'.format(bucket))
+        if get_default("open_ssl"):
+            return _bucket_request(UCLOUD_API_URL_HTTPS, param, header)
         return _bucket_request(UCLOUD_API_URL, param, header)
-
 
     def describebucket(self, bucket=None, offset=0, limit=10, header=None, projectid=None):
         """
@@ -113,6 +112,8 @@ class BucketManager(object):
         signature = self.__auth.bucket_signature(param)
         param['Signature'] = signature
         logger.info('start request the bucket {0} details'.format(bucket))
+        if get_default("open_ssl"):
+            return _bucket_request(UCLOUD_API_URL_HTTPS, param, header)
         return _bucket_request(UCLOUD_API_URL, param, header)
 
     def updatebucket(self, bucket, buckettype, header=None, projectid=None):
@@ -142,7 +143,8 @@ class BucketManager(object):
 
         signature = self.__auth.bucket_signature(param)
         param['Signature'] = signature
-
+        if get_default("open_ssl"):
+            _bucket_request(UCLOUD_API_URL_HTTPS, param, header)
         return _bucket_request(UCLOUD_API_URL, param, header)
 
     def deletebucket(self, bucket, header=None, projectid=None):
@@ -171,6 +173,8 @@ class BucketManager(object):
         signature = self.__auth.bucket_signature(param)
         param['Signature'] = signature
         logger.info('start delete bucket {0}'.format(bucket))
+        if get_default("open_ssl"):
+            return _bucket_request(UCLOUD_API_URL_HTTPS, param, header)
         return _bucket_request(UCLOUD_API_URL, param, header)
 
     def getfilelist(self, bucket, offset=0, limit=20, header=None, projectid=None):
@@ -202,4 +206,6 @@ class BucketManager(object):
         signature = self.__auth.bucket_signature(param)
         param['Signature'] = signature
         logger.info('start request the file list of bucket {0}'.format(bucket))
+        if get_default("open_ssl"):
+            _bucket_request(UCLOUD_API_URL_HTTPS, param, header)
         return _bucket_request(UCLOUD_API_URL, param, header)

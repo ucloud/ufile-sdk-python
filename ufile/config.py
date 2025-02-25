@@ -11,6 +11,7 @@ USER_AGENT = 'UCloud UFile Python SDK {0} ({1} : Python/{2})'.format(__version__
 UCLOUD_PROXY_SUFFIX = '.cn-bj.ufileos.com'
 UCLOUD_DOWNLOAD_SUFFIX = '.cn-bj.ufileos.com'
 UCLOUD_API_URL = 'http://api.ucloud.cn'
+UCLOUD_API_URL_HTTPS = 'https://api.ucloud.cn'
 BLOCKSIZE = 1024 * 1024 * 4
 CONNECTION_POOL_SIZE = 10
 

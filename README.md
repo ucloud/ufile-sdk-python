@@ -146,6 +146,8 @@ config.set_default(connection_timeout=60)
 config.set_default(expires=60)
 #设置上传文件是否进行数据完整性校验（现仅支持putifle和putstream）
 config.set_default(md5=True)
+#设置是否使用https,注意内网不支持https
+config.set_default(open_ssl=True)
 ```
 
 * 如果在实例化 FileManager 和 MultipartUploadUFile 实例时传入相关参数，则生成的实例会使用传入的值，而不是此处设置的默认值。

@@ -385,7 +385,7 @@ def ufile_post_url(bucket, upload_suffix=None):
     :return: string类型, 表单上传UFile的url
     """
     if get_default("open_ssl"):
-        'https://{0}{1}/'.format(bucket, upload_suffix or config.get_default('upload_suffix'))
+        return 'https://{0}{1}/'.format(bucket, upload_suffix or config.get_default('upload_suffix'))
     return 'http://{0}{1}/'.format(bucket, upload_suffix or config.get_default('upload_suffix'))
 
 
@@ -397,7 +397,7 @@ def ufile_uploadhit_url(bucket, upload_suffix=None):
     :return: string类型, 秒传UFile的url
     """
     if get_default("open_ssl"):
-        'https://{0}{1}/uploadhit'.format(bucket, upload_suffix or config.get_default('upload_suffix'))
+        return 'https://{0}{1}/uploadhit'.format(bucket, upload_suffix or config.get_default('upload_suffix'))
     return 'http://{0}{1}/uploadhit'.format(bucket, upload_suffix or config.get_default('upload_suffix'))
 
 
@@ -410,7 +410,7 @@ def initialsharding_url(bucket, key, upload_suffix=None):
     :return: string类型, 初始化分片上传UFile的url
     """
     if get_default("open_ssl"):
-        'https://{0}{1}/{2}?uploads'.format(bucket, upload_suffix or config.get_default('upload_suffix'), key)
+        return 'https://{0}{1}/{2}?uploads'.format(bucket, upload_suffix or config.get_default('upload_suffix'), key)
     return 'http://{0}{1}/{2}?uploads'.format(bucket, upload_suffix or config.get_default('upload_suffix'), key)
 
 
@@ -436,7 +436,7 @@ def shardingupload_url(bucket, key, uploadid, part_number, upload_suffix=None):
     :return: string类型, 结束分片上传UFile的url
     """
     if get_default("open_ssl"):
-        'https://{0}{1}/{2}?uploadId={3}&partNumber={4}'.format(bucket,
+        return 'https://{0}{1}/{2}?uploadId={3}&partNumber={4}'.format(bucket,
                                                                 upload_suffix or config.get_default('upload_suffix'),
                                                                 key, uploadid, s(str(part_number)))
     return 'http://{0}{1}/{2}?uploadId={3}&partNumber={4}'.format(bucket,
@@ -452,7 +452,7 @@ def ufile_getfilelist_url(bucket, upload_suffix=None):
     :return: string类型，获取文件列表的url
     """
     if get_default("open_ssl"):
-        'https://{0}{1}/?list'.format(bucket, upload_suffix or config.get_default('upload_suffix'))
+        return 'https://{0}{1}/?list'.format(bucket, upload_suffix or config.get_default('upload_suffix'))
     return 'http://{0}{1}/?list'.format(bucket, upload_suffix or config.get_default('upload_suffix'))
 
 
